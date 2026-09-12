@@ -68,7 +68,7 @@ export default function App() {
       {/* ── 01: Flagship 360-Frame Cinematic Earth Scroll Hero (First Page Only) ── */}
       <SatScrollHero />
 
-      {/* ── 02: Full Friend UI & Mission Dashboard (Smooth Atmospheric Transition) ── */}
+      {/* ── 02: Full UI & Mission Dashboard (Prominent, High-Resolution Aerospace Workstation) ── */}
       <div
         className="dashboard-container"
         id="dashboard-section"
@@ -77,73 +77,10 @@ export default function App() {
           minHeight: '100vh',
           width: '100%',
           backgroundColor: '#030712',
-          overflow: 'hidden',
+          scrollSnapAlign: 'start',
+          scrollMarginTop: 0,
         }}
       >
-        {/* Seamless feathering bridge from hero zoom */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '180px',
-            background: 'linear-gradient(to bottom, #030712 0%, rgba(3,7,18,0.85) 40%, transparent 100%)',
-            pointerEvents: 'none',
-            zIndex: 15,
-          }}
-        />
-
-        {/* Quick Tactical Mission Lock-In Strip */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 25,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingTop: '2rem',
-            paddingBottom: '0.5rem',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              padding: '6px 18px',
-              borderRadius: '999px',
-              background: 'rgba(6, 182, 212, 0.08)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 0 25px rgba(6, 182, 212, 0.15)',
-            }}
-          >
-            <span
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: '#06b6d4',
-                boxShadow: '0 0 10px #06b6d4',
-                display: 'inline-block',
-              }}
-            />
-            <span
-              style={{
-                fontFamily: 'monospace',
-                fontSize: '0.74rem',
-                letterSpacing: '0.2em',
-                color: '#67e8f9',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              }}
-            >
-              SURFACE TELEMETRY LOCKED · SATELLITE COPILOT ACTIVE
-            </span>
-          </div>
-        </div>
-
         {/* Cursor-Sensitive Cosmic Parallax & Telemetry Mesh */}
         <CursorReactiveBackground />
 
@@ -153,14 +90,20 @@ export default function App() {
           onResetTarget={() => setTargetLocation(null)}
         />
 
-        {/* ── Navbar ──────────────────────────────────────────────────── */}
-        <nav className="navbar" id="main-navbar" style={{ position: 'relative', zIndex: 20 }}>
+        {/* ── Mission Navbar ──────────────────────────────────────────── */}
+        <nav className="navbar" id="main-navbar">
           <div className="navbar-inner">
             <div className="nav-brand">
               <div className="nav-logo">🛰</div>
               <div>
-                <h1 className="nav-title gradient-text">SatQuery AI</h1>
-                <p className="nav-subtitle">Interactive Vision-Language Assistant for Remote Sensing</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <h1 className="nav-title gradient-text">SatQuery AI</h1>
+                  <span className="telemetry-pill">
+                    <span className="pulse-dot" />
+                    SURFACE COPILOT ACTIVE
+                  </span>
+                </div>
+                <p className="nav-subtitle">Interactive Vision-Language Assistant for Multimodal Remote Sensing</p>
               </div>
             </div>
             <div className="nav-badges">
@@ -171,30 +114,20 @@ export default function App() {
           </div>
         </nav>
 
-        {/* ── Hero ────────────────────────────────────────────────────── */}
-        <header className="hero" id="hero-section" style={{ position: 'relative', zIndex: 10 }}>
-          <div className="hero-orb hero-orb-1" />
-          <div className="hero-orb hero-orb-2" />
-          <div className="hero-orb hero-orb-3" />
-          <div className="hero-content">
-            <div className="hero-badge fade-in">
-              <span>🏆</span>
-              <span>ISRO Problem Statement SIH26167</span>
-            </div>
-            <h1 className="hero-title fade-in-up" style={{ animationDelay: '0.05s' }}>
-              Ask anything about<br />
-              <span className="gradient-text">satellite imagery</span>
-            </h1>
-            <p className="hero-desc fade-in-up" style={{ animationDelay: '0.1s' }}>
-              Multimodal VQA · Change Detection · SAR-Optical Fusion · Visual Grounding · Agentic Pipeline
-            </p>
-            <div className="hero-pills fade-in-up" style={{ animationDelay: '0.15s' }}>
-              {['BLIP-2 VQA', 'ChangeFormer', 'SAM Grounding', 'GF-SARNet', '6-Component Confidence', 'Voice Input'].map(p => (
-                <span key={p} className="hero-pill">{p}</span>
-              ))}
+        {/* ── Capability Mission Ribbon ────────────────────────────────── */}
+        <div className="mission-ribbon">
+          <div className="mission-ribbon-inner">
+            <span className="mission-ribbon-title">⚡ ACTIVE CAPABILITY MATRIX:</span>
+            <div className="mission-ribbon-pills">
+              <span className="ribbon-pill">ChangeFormer Bi-Temporal</span>
+              <span className="ribbon-pill">Sentinel-1 C-Band SAR</span>
+              <span className="ribbon-pill">BuildingResUNet Footprints</span>
+              <span className="ribbon-pill">Zero-Shot SAM Grounding</span>
+              <span className="ribbon-pill">BLIP-2 Geospatial VQA</span>
+              <span className="ribbon-pill">Voice Query (EN & HI)</span>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* ── Main workspace ──────────────────────────────────────────── */}
         <main className="workspace" id="main-workspace" style={{ position: 'relative', zIndex: 10 }}>
@@ -220,49 +153,113 @@ export default function App() {
         /* Navbar */
         .navbar {
           position: sticky; top: 0; z-index: 100;
-          background: rgba(6,10,20,0.85); backdrop-filter: blur(20px);
-          border-bottom: 1px solid var(--border-card);
-          padding: 0.75rem 2rem;
+          background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+          padding: 0.85rem 2.5rem;
+          box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
         }
-        .navbar-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
-        .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
-        .nav-logo { font-size: 1.8rem; line-height: 1; }
-        .nav-title { font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
-        .nav-subtitle { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; }
-        .nav-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .navbar-inner {
+          max-width: 1750px;
+          margin: 0 auto;
+          width: 96%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 0.85rem; }
+        .nav-logo { font-size: 2.1rem; line-height: 1; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5)); }
+        .nav-title { font-size: 1.45rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; }
+        .nav-subtitle { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+        .nav-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-        /* Hero */
-        .hero {
-          position: relative; overflow: hidden;
-          padding: 3.5rem 2rem 3rem; text-align: center;
+        .telemetry-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          padding: 2px 10px;
+          border-radius: 999px;
+          background: rgba(6, 182, 212, 0.12);
+          border: 1px solid rgba(6, 182, 212, 0.4);
+          font-family: var(--font-mono, monospace);
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: #67e8f9;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
-        .hero-orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
-        .hero-orb-1 { width: 400px; height: 400px; background: rgba(59,130,246,0.12); top: -100px; left: -100px; }
-        .hero-orb-2 { width: 350px; height: 350px; background: rgba(139,92,246,0.10); top: -50px; right: -80px; }
-        .hero-orb-3 { width: 300px; height: 300px; background: rgba(6,182,212,0.08); bottom: -80px; left: 50%; transform: translateX(-50%); }
-        .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
-        .hero-badge {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-          border-radius: 999px; padding: 5px 16px; font-size: 0.78rem; font-weight: 600;
-          color: var(--text-accent); margin-bottom: 1.25rem;
+        .pulse-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #06b6d4;
+          box-shadow: 0 0 8px #06b6d4;
+          animation: pulseDot 2s infinite ease-in-out;
         }
-        .hero-title { margin-bottom: 0.8rem; letter-spacing: -0.02em; }
-        .hero-desc { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem; }
-        .hero-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
-        .hero-pill {
-          padding: 3px 12px; background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px;
-          font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+        @keyframes pulseDot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Mission Ribbon */
+        .mission-ribbon {
+          position: relative;
+          z-index: 20;
+          background: rgba(11, 19, 41, 0.75);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          padding: 0.5rem 2.5rem;
+        }
+        .mission-ribbon-inner {
+          max-width: 1750px;
+          margin: 0 auto;
+          width: 96%;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .mission-ribbon-inner::-webkit-scrollbar { display: none; }
+        .mission-ribbon-title {
+          font-family: var(--font-mono, monospace);
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: #38bdf8;
+          letter-spacing: 0.12em;
+          white-space: nowrap;
+        }
+        .mission-ribbon-pills {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: nowrap;
+        }
+        .ribbon-pill {
+          padding: 3px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+        .ribbon-pill:hover {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.35);
+          color: #ffffff;
         }
 
         /* Workspace — Half screen 50/50 layout */
         .workspace {
           flex: 1;
           display: grid;
-          grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
           gap: 2rem;
-          padding: 1.5rem 2rem 4rem;
+          padding: 1.5rem 2.5rem 4rem;
           max-width: 1750px;
           margin: 0 auto;
           width: 96%;
@@ -271,7 +268,7 @@ export default function App() {
         .workspace-left {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.25rem;
           position: sticky;
           top: 80px;
           min-width: 0;
@@ -280,17 +277,17 @@ export default function App() {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.25rem;
         }
 
         @media (max-width: 1200px) {
-          .workspace { grid-template-columns: 1fr; max-width: 1000px; }
+          .workspace { grid-template-columns: 1fr; max-width: 1000px; padding: 1.25rem 1.5rem 3rem; }
           .workspace-left { position: static; }
         }
         @media (max-width: 600px) {
           .navbar { padding: 0.6rem 1rem; }
+          .mission-ribbon { padding: 0.4rem 1rem; }
           .workspace { padding: 1rem; width: 100%; }
-          .hero { padding: 2rem 1rem; }
           .nav-badges .badge:nth-child(n+3) { display: none; }
         }
       `}</style>

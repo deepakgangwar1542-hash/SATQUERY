@@ -212,11 +212,18 @@ export default function SatScrollHero() {
     };
   }, [isLoaded, draw]);
 
+  const scrollToDashboard = () => {
+    const el = document.getElementById('dashboard-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div
       ref={containerRef}
       style={{
-        height: '450vh',
+        height: '260vh',
         position: 'relative',
         width: '100%',
       }}
@@ -247,13 +254,153 @@ export default function SatScrollHero() {
         {/* Loading screen */}
         {!isLoaded && <LoadingHUD progress={loadProgress} />}
 
+        {/* ── Cinematic Overlay HUD: Title & Mission Scope (Visible during orbital phase) ── */}
+        {isLoaded && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '2.5rem 2rem 3rem',
+              pointerEvents: 'none',
+              zIndex: 20,
+            }}
+          >
+            {/* Top Telemetry Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                maxWidth: '1350px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  padding: '6px 16px',
+                  borderRadius: '999px',
+                  background: 'rgba(3, 7, 18, 0.7)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#38bdf8',
+                    boxShadow: '0 0 10px #38bdf8',
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.15em',
+                    color: '#7dd3fc',
+                    fontWeight: 700,
+                  }}
+                >
+                  ISRO SIH26167 · ORBITAL COPILOT
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontSize: '0.72rem',
+                  color: 'rgba(148, 163, 184, 0.85)',
+                  background: 'rgba(3, 7, 18, 0.65)',
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(10px)',
+                }}
+              >
+                <span>SENSORS: OPTICAL + C-BAND SAR</span>
+                <span>•</span>
+                <span>DESCENT ENGINE ACTIVE</span>
+              </div>
+            </div>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Bottom Floating Jump Bar & Prompt */}
+            <div
+              style={{
+                pointerEvents: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.8rem',
+              }}
+            >
+              <button
+                onClick={scrollToDashboard}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '12px 28px',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.85) 0%, rgba(99, 102, 241, 0.85) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.35)',
+                  boxShadow: '0 8px 30px rgba(14, 165, 233, 0.4), 0 0 20px rgba(99, 102, 241, 0.3)',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(10px)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(14, 165, 233, 0.6), 0 0 25px rgba(99, 102, 241, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(14, 165, 233, 0.4), 0 0 20px rgba(99, 102, 241, 0.3)';
+                }}
+              >
+                <span>Launch Analysis Workspace</span>
+                <span style={{ fontSize: '1.1rem', animation: 'bounce 1.5s infinite' }}>↓</span>
+              </button>
+
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono, monospace)',
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.15em',
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Scroll down to zoom or click to start
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Exit gentle vignette fade into dashboard */}
         <div
           ref={vignetteRef}
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(3,7,18,0.4) 60%, rgba(6,10,20,1) 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(3,7,18,0.5) 65%, rgba(3,7,18,1) 100%)',
             pointerEvents: 'none',
             opacity: 0,
             transition: 'opacity 0.05s linear',
