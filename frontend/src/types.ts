@@ -81,6 +81,25 @@ export interface QueryResponse {
   execution_trace: ExecutionTrace;
   answer: string;
   report_url: string;
+  semantic_interpretation?: {
+    summary: string;
+    observations: string[];
+    interpretation: string[];
+    conclusion: string;
+    evidence_used: string[];
+    contradictions: string[];
+    uncertainties: string[];
+    limitations: string[];
+    model_name: string;
+    reasoning_mode: string;
+  };
+  evidence?: any;
+  verification?: any;
+  confidence?: any;
+  uncertainty?: any[];
+  provenance?: any;
+  segmentation?: any;
+  refinement?: any;
 }
 
 export interface QueryRequest {

@@ -1,0 +1,36 @@
+# SatQuery AI Ground Truth Benchmark Configuration
+benchmark:
+  name: satquery_standard_eval
+  seed: 42
+  output_dir: ./benchmark_results
+  generate_visualizations: true
+
+tasks:
+  - change_detection
+  - building_segmentation
+  - flood_segmentation
+  - building_impact
+  - capability_enforcement
+  - verification
+
+datasets:
+  - name: synthetic_eval_suite
+    type: synthetic
+    split: test
+
+metrics:
+  - iou
+  - dice
+  - precision
+  - recall
+  - f1
+  - overall_accuracy
+  - expected_calibration_error
+
+ablation:
+  use_changeformer: true
+  use_building_seg: true
+  use_sam_refinement: true
+  use_evidence_fusion: true
+  use_verification: true
+  use_vlm_reasoning: true

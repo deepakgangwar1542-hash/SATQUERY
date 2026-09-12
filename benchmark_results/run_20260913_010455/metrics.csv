@@ -1,0 +1,7 @@
+case_id,task_type,iou,dice,precision,recall,f1,overall_accuracy,latency_ms,confidence,sensor_correct,failure_category
+synth_change_01,change_detection,0.25,0.4,0.25,1.0,0.4,0.25,1638.7,0.9,True,none
+synth_bldg_01,building_segmentation,0.0,0.0,0.0,0.0,0.0,0.0,5.1,0.35,True,segmentation_failure
+synth_flood_01,flood_segmentation,0.2991,0.4604,0.2991,1.0,0.4604,0.2991,9.4,0.91,False,none
+synth_cap_rgb_ndvi_01,capability_enforcement,,,,,,,2.3,0.25,False,none
+synth_cap_single_change_01,capability_enforcement,,,,,,,6.8,0.9,True,unsupported_capability
+synth_verif_bounds_01,verification,,,,,,,6.6,0.87,True,none

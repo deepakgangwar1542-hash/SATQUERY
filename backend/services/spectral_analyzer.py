@@ -52,7 +52,7 @@ def extract_sentinel2_bands(
     if cap.data_type == "none":
         return None, cap, "No imagery provided."
     if cap.data_type == "rgb":
-        return None, cap, "Input is standard RGB optical imagery. Sentinel-2 spectral bands (B04 Red, B08 NIR) are not available."
+        return None, cap, "NDVI cannot be calculated from this RGB image because Near-Infrared (NIR) band is not available. Input is standard RGB optical imagery."
     if cap.data_type not in ("sentinel2", "geotiff") or not RASTERIO_AVAILABLE:
         return None, cap, f"Unsupported raster format: {cap.data_type}. Multispectral analysis requires Sentinel-2 GeoTIFF."
 

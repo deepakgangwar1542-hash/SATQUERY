@@ -1,0 +1,87 @@
+[
+  {
+    "case_id": "synth_bldg_01",
+    "task_type": "building_segmentation",
+    "query": "Detect all building structures and footprints in the scene.",
+    "selected_sensor": "Optical \u2014 Object Extraction",
+    "sensor_selection_correct": true,
+    "capability_enforced_correctly": true,
+    "specialist_agents_executed": [
+      "building_segmentation_agent"
+    ],
+    "verification_status": "passed",
+    "verification_correct": true,
+    "confidence_overall": 0.35,
+    "vlm_groundedness_score": 1.0,
+    "vlm_groundedness_tier": "Fully Grounded",
+    "metrics": {
+      "iou": 0.0,
+      "dice": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "overall_accuracy": 0.0,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 1600,
+      "true_negative": 14784,
+      "absolute_error": null,
+      "relative_error": null,
+      "count_error": null,
+      "ground_truth_available": true,
+      "diagnostic_message": "Prediction mask is absent / model produced no output.",
+      "auxiliary_metrics": {}
+    },
+    "latency_ms": 5.081399998744018,
+    "failure_category": "segmentation_failure",
+    "failure_details": "Low spatial overlap: IoU = 0.000",
+    "warnings": [
+      "Specialist error(s): building_segmentation_agent"
+    ],
+    "visual_artifact_path": null
+  },
+  {
+    "case_id": "synth_cap_single_change_01",
+    "task_type": "capability_enforcement",
+    "query": "What changed between the two dates?",
+    "selected_sensor": "Optical RGB Sensor",
+    "sensor_selection_correct": true,
+    "capability_enforced_correctly": false,
+    "specialist_agents_executed": [
+      "vqa_agent"
+    ],
+    "verification_status": "passed",
+    "verification_correct": true,
+    "confidence_overall": 0.9,
+    "vlm_groundedness_score": 1.0,
+    "vlm_groundedness_tier": "Fully Grounded",
+    "metrics": {
+      "iou": null,
+      "dice": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "overall_accuracy": null,
+      "true_positive": null,
+      "false_positive": null,
+      "false_negative": null,
+      "true_negative": null,
+      "absolute_error": null,
+      "relative_error": null,
+      "count_error": null,
+      "ground_truth_available": true,
+      "diagnostic_message": "Capability enforcement evaluated.",
+      "auxiliary_metrics": {
+        "capability_enforced": false,
+        "notes": [
+          "System failed to flag missing secondary temporal image."
+        ]
+      }
+    },
+    "latency_ms": 6.763800003682263,
+    "failure_category": "unsupported_capability",
+    "failure_details": "System failed to flag missing secondary temporal image.",
+    "warnings": [],
+    "visual_artifact_path": null
+  }
+]

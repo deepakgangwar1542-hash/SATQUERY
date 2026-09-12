@@ -26,12 +26,25 @@ class QueryRequest(BaseModel):
 class EarthQuerySpec(BaseModel):
     intent: str = Field(..., description="Classified task intent")
     task_type: Literal[
+        # Core VQA / perception tasks
         "vqa", "captioning", "grounding",
+        # Temporal change tasks
         "change_detection", "change_vqa",
-        "sar_optical_joint", "unknown"
+        # Task-specific analysis tasks
+        "urban_change",        # construction / built-up expansion
+        "vegetation_change",   # NDVI / spectral vegetation analysis
+        "flood_impact",        # flood detection + building impact
+        "sar_change",          # Sentinel-1 temporal SAR change
+        "fire_analysis",       # burn / wildfire area
+        "object_extraction",   # segmentation / object detection
+        "semantic_analysis",   # VLM scene explanation
+        # Multi-modal joint analysis
+        "sar_optical_joint",
+        # Fallback
+        "unknown"
     ]
     requires_two_images: bool
-    sensor_hint: Optional[str] = Field(None, description="optical | sar | any")
+    sensor_hint: Optional[str] = Field(None, description="optical | sar | both | any")
     temporal_context: Optional[str] = Field(None, description="before/after labels if bi-temporal")
     extracted_entities: List[str] = Field(default_factory=list)
     confidence: float = Field(..., ge=0.0, le=1.0)
@@ -60,12 +73,23 @@ class AgentOutput(BaseModel):
 
 # ─── Verifier ─────────────────────────────────────────────────────────────────
 
+class VerifierCheck(BaseModel):
+    name: str
+    status: Literal["passed", "warning", "failed"]
+    details: str
+
+
 class VerifierResult(BaseModel):
     agreement: bool
     conflicts_found: List[str] = Field(default_factory=list)
     replanned: bool = False
     replan_reason: Optional[str] = None
     final_answer: str
+    status: Literal["passed", "passed_with_warnings", "failed", "insufficient_evidence"] = "passed"
+    checks: List[VerifierCheck] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    errors: List[str] = Field(default_factory=list)
+    replanning_required: bool = False
 
 
 # ─── Confidence Breakdown (6-component) ───────────────────────────────────────
@@ -78,6 +102,16 @@ class ConfidenceBreakdown(BaseModel):
     temporal_consistency: float = Field(..., ge=0.0, le=1.0)
     answer_groundedness: float = Field(..., ge=0.0, le=1.0)
     overall: float = Field(..., ge=0.0, le=1.0)
+    interpretation: Optional[str] = None
+    explanation: Optional[str] = None
+
+
+# ─── Uncertainty ──────────────────────────────────────────────────────────────
+
+class UncertaintyItem(BaseModel):
+    type: str
+    severity: Literal["low", "medium", "high", "critical"]
+    description: str
 
 
 # ─── Provenance / Execution Trace ─────────────────────────────────────────────
@@ -99,16 +133,51 @@ class ExecutionTrace(BaseModel):
     total_duration_ms: float
 
 
-# ─── Full Query Response ──────────────────────────────────────────────────────
+# ─── Analysis Plan (from AnalysisPlanner) ──────────────────────────────────────
+
+class TaskPlan(BaseModel):
+    """Machine-generated execution plan created by the AnalysisPlanner."""
+    task: str
+    required_agents: List[str]
+    preferred_sensors: List[str]
+    use_sar: bool = False
+    use_optical: bool = True
+    use_changeformer: bool = False
+    use_building_seg: bool = False
+    use_spatial_intersection: bool = False
+    use_fusion: bool = False
+    use_sam: bool = False
+    sam_refinement_target: Optional[str] = None
+    rationale: str
+    limitations: List[str] = Field(default_factory=list)
+
+
+from backend.models.vlm.schemas import SemanticInterpretation
+
+# ─── Full Query Response ──────────────────────────────────────────────
 
 class QueryResponse(BaseModel):
     query_id: str
     question: str
     earthquery_spec: EarthQuerySpec
     sensor_selection: SensorSelection
+    task_plan: Optional[TaskPlan] = None    # populated by AnalysisPlanner
     agent_outputs: List[AgentOutput]
     verifier_result: VerifierResult
     confidence_breakdown: ConfidenceBreakdown
     execution_trace: ExecutionTrace
     answer: str
     report_url: str
+
+    # Additive structured fields (Part 39)
+    evidence: Optional[Dict[str, Any]] = None
+    verification: Optional[Dict[str, Any]] = None
+    confidence: Optional[Dict[str, Any]] = None
+    uncertainty: Optional[List[UncertaintyItem]] = None
+    provenance: Optional[Dict[str, Any]] = None
+    segmentation: Optional[Dict[str, Any]] = None
+    refinement: Optional[Dict[str, Any]] = None
+
+    # Multimodal Semantic Reasoning Layer (VLM)
+    semantic_interpretation: Optional[SemanticInterpretation] = None
+

@@ -9,6 +9,7 @@ import os
 
 from backend.api.routes_query import router as query_router
 from backend.api.routes_report import router as report_router
+from backend.api.routes_benchmark import router as benchmark_router
 
 app = FastAPI(
     title="SatQuery AI",
@@ -26,6 +27,7 @@ app.add_middleware(
 
 app.include_router(query_router, prefix="/query", tags=["Query"])
 app.include_router(report_router, prefix="/report", tags=["Report"])
+app.include_router(benchmark_router, prefix="/benchmark", tags=["Benchmark"])
 
 
 @app.get("/health")

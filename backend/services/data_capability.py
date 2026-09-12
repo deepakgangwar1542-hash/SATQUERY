@@ -26,7 +26,10 @@ except ImportError:
 
 
 class DataCapability(BaseModel):
-    data_type: str = Field(..., description="rgb | sentinel2 | geotiff | svg | unsupported | none")
+    data_type: str = Field(..., description="rgb | sentinel2 | sentinel1 | geotiff | svg | unsupported | none")
+    modality: str = Field("optical", description="optical | sar | joint | vector | none")
+    polarizations: List[str] = Field(default_factory=list)
+    sensor_family: Optional[str] = None
     multispectral: bool = False
     georeferenced: bool = False
     available_bands: List[str] = Field(default_factory=list)
@@ -39,6 +42,8 @@ class DataCapability(BaseModel):
     bounds: Optional[List[float]] = None
     resolution: Optional[List[float]] = None
     nodata: Optional[float] = None
+    cloud_cover_estimate: Optional[float] = None
+    acquisition_date: Optional[str] = None
     notes: List[str] = Field(default_factory=list)
 
 
@@ -124,6 +129,65 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
                             name = desc or tag_name or ""
                             band_names.append(name.upper())
 
+                        # Check for Sentinel-1 SAR polarizations (VV, VH, HH, HV)
+                        sar_pols: List[str] = []
+                        for i in range(1, count + 1):
+                            tag_dict = src.tags(i)
+                            pol = (
+                                tag_dict.get("POLARISATION")
+                                or tag_dict.get("POLARIZATION")
+                                or tag_dict.get("POL")
+                                or ""
+                            ).upper()
+                            bname = band_names[i - 1] if i - 1 < len(band_names) else ""
+                            if pol in ("VV", "VH", "HH", "HV"):
+                                sar_pols.append(pol)
+                            elif bname in ("VV", "VH", "HH", "HV"):
+                                sar_pols.append(bname)
+                            elif any(bname.startswith(p) for p in ("VV", "VH", "HH", "HV")):
+                                for p in ("VV", "VH", "HH", "HV"):
+                                    if bname.startswith(p):
+                                        sar_pols.append(p)
+                                        break
+
+                        root_tags = src.tags()
+                        sensor_tag = (
+                            root_tags.get("SENSOR")
+                            or root_tags.get("SPACECRAFT_NAME")
+                            or root_tags.get("PLATFORM")
+                            or root_tags.get("MISSION")
+                            or root_tags.get("MISSION_ID")
+                            or ""
+                        ).upper()
+                        is_s1_platform = any(k in sensor_tag for k in ("SENTINEL-1", "SENTINEL 1", "S1A", "S1B", "C-SAR", "ASAR"))
+
+                        # Sentinel-1 SAR detection
+                        if len(sar_pols) >= 1 or (is_s1_platform and count in (1, 2)):
+                            effective_pols = sar_pols if sar_pols else (["VV", "VH"] if count == 2 else ["VV"])
+                            return DataCapability(
+                                data_type="sentinel1",
+                                modality="sar",
+                                polarizations=effective_pols,
+                                sensor_family="sentinel-1",
+                                multispectral=False,
+                                georeferenced=georeferenced,
+                                available_bands=effective_pols,
+                                sensor="Sentinel-1 C-band SAR",
+                                width=width,
+                                height=height,
+                                band_count=count,
+                                crs=crs,
+                                transform=transform,
+                                bounds=bounds,
+                                resolution=res,
+                                nodata=nodata,
+                                notes=[
+                                    f"Sentinel-1 SAR raster verified ({count} band(s)).",
+                                    f"Polarizations: {', '.join(effective_pols)}.",
+                                    f"CRS: {crs or 'Unprojected'}.",
+                                ],
+                            )
+
                         # Check for Sentinel-2 bands (B03, B04, B08 or Green, Red, NIR)
                         s2_tags = {"B03", "B04", "B08"}
                         detected_s2 = False
@@ -133,9 +197,6 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
                         if len(found_s2_bands) >= 2:
                             detected_s2 = True
 
-                        # Fallback check: GeoTIFF with 3 or 4 16-bit or float bands with S2-style tags
-                        root_tags = src.tags()
-                        sensor_tag = (root_tags.get("SENSOR") or root_tags.get("SPACECRAFT_NAME") or "").upper()
                         if "SENTINEL-2" in sensor_tag or "SENTINEL 2" in sensor_tag or "MSI" in sensor_tag:
                             detected_s2 = True
 
@@ -158,6 +219,8 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
 
                             return DataCapability(
                                 data_type="sentinel2",
+                                modality="optical",
+                                sensor_family="sentinel-2",
                                 multispectral=True,
                                 georeferenced=georeferenced,
                                 available_bands=mapped_bands,
@@ -183,6 +246,8 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
                             if count == 3 and src.dtypes[0] == "uint8" and not detected_s2:
                                 return DataCapability(
                                     data_type="rgb",
+                                    modality="optical",
+                                    sensor_family="optical",
                                     multispectral=False,
                                     georeferenced=georeferenced,
                                     available_bands=["R", "G", "B"],
@@ -200,6 +265,8 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
 
                             return DataCapability(
                                 data_type="geotiff",
+                                modality="optical",
+                                sensor_family="optical",
                                 multispectral=(count >= 4 or detected_s2),
                                 georeferenced=georeferenced,
                                 available_bands=band_names or [f"Band_{i}" for i in range(1, count + 1)],
@@ -226,6 +293,8 @@ def inspect_data_capability(b64_str: str | None) -> DataCapability:
         bands = list(img.getbands())
         return DataCapability(
             data_type="rgb",
+            modality="optical",
+            sensor_family="optical",
             multispectral=False,
             georeferenced=False,
             available_bands=bands,

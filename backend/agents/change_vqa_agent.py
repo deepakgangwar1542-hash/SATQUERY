@@ -5,7 +5,10 @@ Combines genuine bi-temporal pixel differencing with query-specific semantic rea
 from __future__ import annotations
 import re
 import time
+import numpy as np
+from PIL import Image
 from backend.schemas.response import AgentOutput
+from backend.services.data_capability import inspect_data_capability
 from backend.services.cv_analyzer import decode_image_b64, extract_svg_keywords_and_stats, analyze_scene_image
 from backend.agents.change_detection_agent import _compute_image_change
 
@@ -68,6 +71,12 @@ class ChangeVQAAgent:
                 error="Invalid image payload.",
             )
 
+        # Align spatial dimensions if user supplied images of differing resolutions
+        if img0_arr.shape[:2] != img1_arr.shape[:2]:
+            target_h, target_w = img1_arr.shape[0], img1_arr.shape[1]
+            pil0 = Image.fromarray(np.clip(img0_arr, 0, 255).astype(np.uint8))
+            img0_arr = np.array(pil0.resize((target_w, target_h), Image.Resampling.BILINEAR))
+
         # Real pixel differencing
         change_pct, changed_count, total_valid, _, bbox = _compute_image_change(img0_arr, img1_arr, polygon=polygon)
 
@@ -82,6 +91,135 @@ class ChangeVQAAgent:
 
         d_barren = stats1["barren_coverage_pct"] - stats0["barren_coverage_pct"]
         is_hindi = bool(re.search(r"[\u0900-\u097F]|kitna|kitni|kya|nuksan|asar|badla|pehle|baad|zameen|prabhavit", q))
+
+        cap1 = inspect_data_capability(image2_b64)
+        is_building_query = bool(re.search(r"\b(building|buildings|house|houses|structure|structures|infrastructure|imarat|ghar)\b", q))
+
+        # 0. Building impact during flood / natural hazard
+        if is_building_query and re.search(r"flood|water|inundat|affect|damage|impact|nuksan|asar|hazard|submerge", q):
+            from backend.services.flood_analyzer import analyze_temporal_flood
+            from backend.models.buildings import get_building_manager
+            from backend.services.spatial_intersection import intersect_buildings_with_flood
+
+            flood_res = analyze_temporal_flood(
+                arr0=img0_arr,
+                arr1=img1_arr,
+                polygon=polygon,
+                transform=cap1.transform,
+                crs=cap1.crs,
+                resolution=cap1.resolution,
+            )
+
+            b_mgr = get_building_manager()
+            b_res = b_mgr.detect_buildings(
+                image_arr=img1_arr,
+                transform=cap1.transform,
+                crs=cap1.crs,
+                resolution=cap1.resolution,
+            )
+
+            evidence_regions = []
+            if b_res.success and b_res.building_count is not None:
+                inter_res = intersect_buildings_with_flood(
+                    buildings=b_res.building_instances,
+                    flood_geometry=flood_res.flood_increase_geometry,
+                    overlap_threshold=b_mgr.config.flood_overlap_threshold,
+                )
+
+                # Collect affected building bounding boxes for visualization
+                affected_set = set(inter_res.affected_building_ids)
+                for b_inst in b_res.building_instances:
+                    if b_inst.building_id in affected_set:
+                        scale_y = 512.0 / img1_arr.shape[0]
+                        scale_x = 512.0 / img1_arr.shape[1]
+                        evidence_regions.append({
+                            "bbox": [
+                                int(b_inst.bbox_pixel[0] * scale_y),
+                                int(b_inst.bbox_pixel[1] * scale_x),
+                                int(b_inst.bbox_pixel[2] * scale_y),
+                                int(b_inst.bbox_pixel[3] * scale_x),
+                            ],
+                            "label": f"affected_{b_inst.building_id}",
+                            "confidence": 0.90,
+                        })
+
+                km2_str = f" (~{flood_res.flood_increase_area_km2} km²)" if flood_res.flood_increase_area_km2 else ""
+                sens_str = ", ".join([f"{k.replace('_overlap', '')}: {v}" for k, v in inter_res.sensitivity_analysis.items() if "overlap" in k][:3])
+
+                if is_hindi:
+                    answer = (
+                        f"{roi_prefix}T0 और T1 के बीच बाढ़ का फैलाव +{flood_res.flood_increase_pct:.1f}% दर्ज किया गया{km2_str}। "
+                        f"स्थानिक ज्यामितीय प्रतिच्छेदन (Spatial Intersection) के अनुसार, कुल {inter_res.total_buildings} इमारतों में से "
+                        f"{inter_res.affected_buildings} इमारतें बाढ़ से सीधे प्रभावित हुई हैं ({inter_res.affected_building_percentage:.1f}%, "
+                        f"न्यूनतम {int(inter_res.overlap_threshold*100)}% जलमग्नता मानदंड)। संवेदनशीलता विश्लेषण ({sens_str})।"
+                    )
+                else:
+                    answer = (
+                        f"{roi_prefix}Between the two observations, flood inundation expanded across +{flood_res.flood_increase_pct:.1f}% "
+                        f"of the analyzed terrain{km2_str} (+{flood_res.flood_increase_px:,} newly flooded pixels). "
+                        f"Spatial geometric intersection with extracted building footprints confirmed {inter_res.affected_buildings} "
+                        f"affected building(s) out of {inter_res.total_buildings} total buildings ({inter_res.affected_building_percentage:.1f}%, "
+                        f"based on the >={int(inter_res.overlap_threshold*100)}% footprint overlap criterion). "
+                        f"Threshold sensitivity analysis: {sens_str}."
+                    )
+
+                elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+                return AgentOutput(
+                    agent_id=self.AGENT_ID,
+                    agent_name=self.AGENT_NAME,
+                    task="Bi-temporal Flood & Building Impact Analysis",
+                    result={
+                        "question": question,
+                        "answer": answer,
+                        "flood_analysis": flood_res.to_dict(),
+                        "building_analysis": b_res.to_dict(),
+                        "spatial_intersection": inter_res.to_dict(),
+                        "building_impact": {
+                            "total_buildings": inter_res.total_buildings,
+                            "affected_buildings": inter_res.affected_buildings,
+                            "affected_building_percentage": inter_res.affected_building_percentage,
+                            "mean_overlap_ratio": inter_res.mean_overlap_ratio,
+                            "max_overlap_ratio": inter_res.max_overlap_ratio,
+                            "overlap_threshold": inter_res.overlap_threshold,
+                            "sensitivity_analysis": inter_res.sensitivity_analysis,
+                        },
+                        "pixel_change_percent": change_pct,
+                        "model": f"Building Impact Engine ({b_res.metadata.get('model', 'ResUNet')} + Shapely)",
+                        "inference_time_ms": elapsed_ms,
+                    },
+                    evidence_regions=evidence_regions[:8] if evidence_regions else None,
+                    raw_score=0.95,
+                )
+            else:
+                # Building model unavailable - truthful state without fabrication
+                km2_str = f" (~{flood_res.flood_increase_area_km2} km²)" if flood_res.flood_increase_area_km2 else ""
+                answer = (
+                    f"{roi_prefix}Between the two dates, flood inundation increased across +{flood_res.flood_increase_pct:.1f}% of the scene{km2_str} "
+                    f"(+{flood_res.flood_increase_px:,} newly flooded pixels). "
+                    f"However, building footprint impact cannot be quantified because a local building segmentation checkpoint is not configured "
+                    f"(status: building_model_unavailable). SatQuery refuses to fabricate building counts without real neural model weights."
+                )
+                elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+                return AgentOutput(
+                    agent_id=self.AGENT_ID,
+                    agent_name=self.AGENT_NAME,
+                    task="Bi-temporal Flood & Building Impact Analysis",
+                    result={
+                        "question": question,
+                        "answer": answer,
+                        "flood_analysis": flood_res.to_dict(),
+                        "building_analysis": {
+                            "status": "building_model_unavailable",
+                            "affected_buildings": None,
+                            "reason": b_res.reason or "Building checkpoint not available.",
+                        },
+                        "pixel_change_percent": change_pct,
+                        "model": "Bi-temporal Flood Engine",
+                        "inference_time_ms": elapsed_ms,
+                    },
+                    evidence_regions=None,
+                    raw_score=0.75,
+                )
 
         # Query-specific natural language answering
         # 1. Affected area / Damage / Impact queries

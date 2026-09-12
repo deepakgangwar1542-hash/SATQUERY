@@ -1,0 +1,106 @@
+{
+  "run_id": "run_20260913_010455",
+  "name": "satquery_benchmark_run",
+  "timestamp": "2026-09-13 01:04:57",
+  "software_version": "1.0.0",
+  "hardware_info": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python_version": "3.12.10"
+  },
+  "total_cases": 6,
+  "evaluated_cases": 6,
+  "ground_truth_cases": 6,
+  "successful_cases": 4,
+  "failed_cases": 2,
+  "mean_iou": 0.183,
+  "mean_dice": 0.2868,
+  "mean_precision": 0.183,
+  "mean_recall": 0.6667,
+  "sensor_selection_accuracy": 0.667,
+  "unsupported_rejection_rate": 0.833,
+  "verification_detection_rate": 0.833,
+  "expected_calibration_error": 0.4051,
+  "confidence_buckets": [
+    {
+      "bin_range": "0.0-0.2",
+      "sample_count": 0,
+      "average_confidence": 0.1,
+      "average_accuracy": 0.0,
+      "calibration_gap": 0.0
+    },
+    {
+      "bin_range": "0.2-0.4",
+      "sample_count": 2,
+      "average_confidence": 0.3,
+      "average_accuracy": 0.5,
+      "calibration_gap": 0.2
+    },
+    {
+      "bin_range": "0.4-0.6",
+      "sample_count": 0,
+      "average_confidence": 0.5,
+      "average_accuracy": 0.0,
+      "calibration_gap": 0.0
+    },
+    {
+      "bin_range": "0.6-0.8",
+      "sample_count": 0,
+      "average_confidence": 0.7,
+      "average_accuracy": 0.0,
+      "calibration_gap": 0.0
+    },
+    {
+      "bin_range": "0.8-1.0",
+      "sample_count": 4,
+      "average_confidence": 0.895,
+      "average_accuracy": 0.387,
+      "calibration_gap": 0.508
+    }
+  ],
+  "task_breakdown": {
+    "change_detection": {
+      "count": 1,
+      "mean_iou": 0.25,
+      "mean_f1": 0.4,
+      "sensor_accuracy": 1.0
+    },
+    "building_segmentation": {
+      "count": 1,
+      "mean_iou": 0.0,
+      "mean_f1": 0.0,
+      "sensor_accuracy": 1.0
+    },
+    "flood_segmentation": {
+      "count": 1,
+      "mean_iou": 0.2991,
+      "mean_f1": 0.4604,
+      "sensor_accuracy": 0.0
+    },
+    "capability_enforcement": {
+      "count": 2,
+      "mean_iou": null,
+      "mean_f1": null,
+      "sensor_accuracy": 0.5
+    },
+    "verification": {
+      "count": 1,
+      "mean_iou": null,
+      "mean_f1": null,
+      "sensor_accuracy": 1.0
+    }
+  },
+  "failure_taxonomy": {
+    "segmentation_failure": 1,
+    "unsupported_capability": 1
+  },
+  "mean_latency_ms": 278.1,
+  "ablation_config": {
+    "use_changeformer": true,
+    "use_building_seg": true,
+    "use_sam_refinement": true,
+    "use_evidence_fusion": true,
+    "use_verification": true,
+    "use_vlm_reasoning": true
+  }
+}

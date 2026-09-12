@@ -14,6 +14,8 @@ const AGENT_COLORS: Record<string, string> = {
   change_detection_agent: 'var(--accent-warning)',
   change_vqa_agent:       'var(--accent-warning)',
   sar_optical_agent:      'var(--accent-success)',
+  sam_agent:              '#ec4899',
+  spectral_analysis_agent:'#10b981',
 };
 
 export default function AgentOutputCard({ output, index }: Props) {
