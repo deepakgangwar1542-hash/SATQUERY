@@ -236,18 +236,18 @@ class VQAAgent:
 
         elif re.search(r"affect|damage|impact|loss|submerged|destruction|destroy|hazard|नुकसान|प्रभाव|असर", q):
             detected_class = "affected_hazard_area"
-            if water > 8.0:
-                coverage_pct = water
-                answer = (
-                    f"{roi_prefix}Approximately {water:.1f}% of this scene appears directly affected by surface water and flood inundation. "
-                    f"The remaining {max(0.0, 100.0 - water):.1f}% of the visible landscape consists of unaffected terrain, vegetation, and built structures."
-                )
-            elif fire > 2.0 or burn > 3.0:
+            if fire > 1.0 or burn > 2.5 or (stats["dominant_class"] in ("Fire / Thermal Anomaly", "Burn Scar / Charred Surface")):
                 total_fire = fire + burn
                 coverage_pct = total_fire
                 answer = (
                     f"{roi_prefix}Approximately {total_fire:.1f}% of the visible terrain shows active wildfire fronts or charred burn damage "
                     f"(flaming: {fire:.1f}%, charred: {burn:.1f}%). The remaining {max(0.0, 100.0 - total_fire):.1f}% is unburned."
+                )
+            elif water > 12.0:
+                coverage_pct = water
+                answer = (
+                    f"{roi_prefix}Approximately {water:.1f}% of this scene appears directly affected by surface water and flood inundation. "
+                    f"The remaining {max(0.0, 100.0 - water):.1f}% of the visible landscape consists of unaffected terrain, vegetation, and built structures."
                 )
             else:
                 coverage_pct = 0.0

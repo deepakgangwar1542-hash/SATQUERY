@@ -224,11 +224,40 @@ class ChangeVQAAgent:
         # Query-specific natural language answering
         # 1. Affected area / Damage / Impact queries
         if re.search(r"affect|damage|impact|loss|submerged|destruction|destroy|hazard|nuksan|nuksaan|asar|prabhavit|नुकसान|प्रभाव|असर", q):
-            # Flood / Inundation or silt deposition
-            if d_water > 2.0 or (stats1["water_coverage_pct"] > 8.0 and d_veg < -4.0) or (d_barren > 5.0 and d_veg < -5.0) or (d_veg < -15.0 and change_pct > 15.0):
+            # A. Wildfire / Thermal / Active fire & Burn Scar (Check first!)
+            has_fire_evidence = (
+                d_fire > 1.0 or d_burn > 2.0 or
+                stats1["fire_coverage_pct"] > 1.0 or stats1["burn_scar_pct"] > 2.5 or
+                stats1["dominant_class"] in ("Fire / Thermal Anomaly", "Burn Scar / Charred Surface")
+            )
+            # B. Flood / Water Inundation (Only if genuine water increase and no fire)
+            has_flood_evidence = (
+                (d_water > 2.0 or (stats1["water_coverage_pct"] > 12.0 and d_water > 0.0)) and
+                not has_fire_evidence
+            )
+
+            if has_fire_evidence:
+                total_fire = stats1["fire_coverage_pct"] + stats1["burn_scar_pct"]
                 if is_hindi:
                     answer = (
-                        f"{roi_prefix}T0 (पहले) और T1 (बाद) की तुलना के अनुसार, लगभग {change_pct:.1f}% ज़मीन सीधे तौर पर प्रभावित हुई है। "
+                        f"{roi_prefix}लगभग {change_pct:.1f}% ज़मीन जंगल की आग (wildfire) और जलने से प्रभावित हुई है। "
+                        f"T0 (पहले) और T1 (बाद) के तुलनात्मक विश्लेषण में सक्रिय आग और जली हुई सतह (burn scar) दर्ज की गई "
+                        f"(सक्रिय आग: {stats1['fire_coverage_pct']:.1f}%, जली हुई ज़मीन: {stats1['burn_scar_pct']:.1f}%), "
+                        f"जिससे स्वस्थ वनस्पति आवरण में {abs(d_veg):.1f}% की भारी गिरावट आई है। "
+                        f"बाकी {max(0.0, 100.0 - change_pct):.1f}% क्षेत्र अप्रभावित/सुरक्षित है।"
+                    )
+                else:
+                    answer = (
+                        f"{roi_prefix}Approximately {change_pct:.1f}% of the land has been directly affected by wildfire damage. "
+                        f"Comparing the pre-event baseline (T0) and post-event imagery (T1), active fire fronts and charred burn scars "
+                        f"expanded across the terrain (active flaming: {stats1['fire_coverage_pct']:.1f}%, charred burn scar: {stats1['burn_scar_pct']:.1f}%), "
+                        f"causing a substantial {abs(d_veg):.1f}% loss in healthy vegetation canopy. "
+                        f"The remaining {max(0.0, 100.0 - change_pct):.1f}% of the analyzed terrain remains unburned."
+                    )
+            elif has_flood_evidence:
+                if is_hindi:
+                    answer = (
+                        f"{roi_prefix}T0 (पहले) और T1 (बाद) की तुलना के अनुसार, लगभग {change_pct:.1f}% ज़मीन सीधे तौर पर बाढ़ और जलभराव से प्रभावित हुई है। "
                         f"बाढ़ के पानी और गाद (silt/sediment) के फैलाव के कारण पहले की हरी-भरी वनस्पति में {abs(d_veg):.1f}% की गिरावट आई है। "
                         f"बाकी {max(0.0, 100.0 - change_pct):.1f}% क्षेत्र सुरक्षित और बाढ़ के स्तर से ऊपर है।"
                     )
@@ -239,20 +268,16 @@ class ChangeVQAAgent:
                         f"expanded across the terrain, substantially submerging agricultural and vegetated land (vegetation cover dropped by {abs(d_veg):.1f}%). "
                         f"The remaining {max(0.0, 100.0 - change_pct):.1f}% of the analyzed terrain remains above flood levels."
                     )
-            elif d_fire > 2.0 or d_burn > 3.0:
-                total_fire = stats1["fire_coverage_pct"] + stats1["burn_scar_pct"]
+            elif d_urban > 5.0 or (stats1["urban_coverage_pct"] > stats0["urban_coverage_pct"] + 3.0 and d_veg < -3.0):
                 if is_hindi:
                     answer = (
-                        f"{roi_prefix}लगभग {change_pct:.1f}% ज़मीन जंगल की आग (wildfire) से प्रभावित हुई है। "
-                        f"T1 विश्लेषण में {total_fire:.1f}% सक्रिय आग और जली हुई ज़मीन (burn scar) दर्ज की गई, "
-                        f"जिससे वनस्पति आवरण में {abs(d_veg):.1f}% की हानि हुई है।"
+                        f"{roi_prefix}लगभग {change_pct:.1f}% क्षेत्र में शहरी विस्तार और निर्माण कार्य हुआ है। "
+                        f"निर्मित क्षेत्र (built-up) {stats0['urban_coverage_pct']:.1f}% से बढ़कर {stats1['urban_coverage_pct']:.1f}% हो गया है।"
                     )
                 else:
                     answer = (
-                        f"{roi_prefix}Approximately {change_pct:.1f}% of the land has been affected by wildfire damage. "
-                        f"Post-event analysis indicates {total_fire:.1f}% active flame and burn scar coverage "
-                        f"(Flaming: {stats1['fire_coverage_pct']:.1f}%, Charred: {stats1['burn_scar_pct']:.1f}%), "
-                        f"causing a {abs(d_veg):.1f}% loss in healthy vegetation canopy."
+                        f"{roi_prefix}Approximately {change_pct:.1f}% of the land has undergone urban development or construction expansion, "
+                        f"with built-up structures expanding from {stats0['urban_coverage_pct']:.1f}% at T0 to {stats1['urban_coverage_pct']:.1f}% at T1."
                     )
             elif d_veg < -5.0:
                 if is_hindi:
@@ -263,9 +288,9 @@ class ChangeVQAAgent:
                     )
                 else:
                     answer = (
-                        f"{roi_prefix}Approximately {change_pct:.1f}% of the land has been affected by canopy degradation or clearing, "
-                        f"with healthy green vegetation dropping from {stats0['vegetation_coverage_pct']:.1f}% to "
-                        f"{stats1['vegetation_coverage_pct']:.1f}% (net canopy loss of {abs(d_veg):.1f}%)."
+                        f"{roi_prefix}Approximately {change_pct:.1f}% of the land has been affected by canopy degradation or vegetation clearing, "
+                        f"with healthy green vegetation dropping from {stats0['vegetation_coverage_pct']:.1f}% at T0 to "
+                        f"{stats1['vegetation_coverage_pct']:.1f}% at T1 (net canopy loss of {abs(d_veg):.1f}%)."
                     )
             else:
                 answer = (
@@ -276,7 +301,7 @@ class ChangeVQAAgent:
 
         # 2. Water / Flood / Hydrology questions
         elif re.search(r"water|flood|inundat|lake|river|level|pond|pani|nadi|jal", q):
-            if d_water > 2.0 or (d_barren > 5.0 and d_veg < -5.0):
+            if d_water > 2.0 or (stats1["water_coverage_pct"] > 10.0 and d_water > 0.0):
                 flood_shift = d_water if d_water > 2.0 else change_pct
                 answer = (
                     f"{roi_prefix}Water coverage increased by +{flood_shift:.1f}% across the bi-temporal interval "
@@ -296,7 +321,7 @@ class ChangeVQAAgent:
 
         # 3. Fire / Thermal questions
         elif re.search(r"fire|burn|flame|heat|wildfire|ash|thermal|aag", q):
-            if d_fire > 2.0 or d_burn > 3.0 or stats1["fire_coverage_pct"] > 3.0:
+            if d_fire > 1.0 or d_burn > 2.0 or stats1["fire_coverage_pct"] > 1.5 or stats1["burn_scar_pct"] > 2.5:
                 total_burn = stats1["fire_coverage_pct"] + stats1["burn_scar_pct"]
                 answer = (
                     f"{roi_prefix}Wildfire and burn scar progression is confirmed across {total_burn:.1f}% of the post-event scene "
@@ -311,10 +336,11 @@ class ChangeVQAAgent:
         # 4. Vegetation questions
         elif re.search(r"vegetation|forest|tree|crop|agriculture|green|deforest|ped|fasal|jungle", q):
             if d_veg < -5.0:
+                reason = "wildfire damage and burn scar expansion" if (d_fire > 1.0 or d_burn > 2.0) else "clearing or canopy disturbance"
                 answer = (
                     f"{roi_prefix}Green vegetation canopy decreased by {abs(d_veg):.1f}% "
                     f"(T0: {stats0['vegetation_coverage_pct']:.1f}% → T1: {stats1['vegetation_coverage_pct']:.1f}%), "
-                    f"reflecting significant clearing, canopy loss, or flood submergence."
+                    f"reflecting significant {reason}."
                 )
             elif d_veg > 5.0:
                 answer = (

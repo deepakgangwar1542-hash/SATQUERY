@@ -65,6 +65,7 @@ export default function SatScrollHero() {
 
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded,     setIsLoaded]     = useState(false);
+  const [currentFrame, setCurrentFrame] = useState(1);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
 
@@ -84,6 +85,8 @@ export default function SatScrollHero() {
     // Use logical (CSS) pixel dimensions — context is already dpr-scaled
     const cw = canvas.clientWidth;
     const ch = canvas.clientHeight;
+    if (cw === 0 || ch === 0) return;
+
     const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
     const sw    = img.naturalWidth  * scale;
     const sh    = img.naturalHeight * scale;
@@ -127,18 +130,25 @@ export default function SatScrollHero() {
     for (let i = 0; i < FRAME_COUNT; i++) {
       const img = new Image();
       img.decoding = 'async';
-      img.src   = frameSrc(FRAME_START + i);
+      img.src = frameSrc(FRAME_START + i);
       const onDone = () => {
         done++;
         setLoadProgress(done / FRAME_COUNT);
-        if (done === FRAME_COUNT) setIsLoaded(true);
+        if (i === 0) {
+          // Render first frame immediately as soon as frame 0 loads!
+          resize();
+          draw(0);
+        }
+        if (done === FRAME_COUNT) {
+          setIsLoaded(true);
+        }
       };
       img.onload  = onDone;
       img.onerror = onDone;
       imgs.push(img);
     }
     imagesRef.current = imgs;
-  }, []);
+  }, [resize, draw]);
 
   useEffect(() => {
     resize();
@@ -152,8 +162,6 @@ export default function SatScrollHero() {
 
   // ── High-Precision Smooth Frame Engine (Zero-Jitter, 60+ FPS) ───────────
   useEffect(() => {
-    if (!isLoaded) return;
-
     let targetProgress = 0;
     let currentProgress = 0;
     let animId: number | null = null;
@@ -171,7 +179,6 @@ export default function SatScrollHero() {
     };
 
     const renderLoop = () => {
-      // Damped smooth lerp: catches up smoothly even at tiny fractional scroll increments
       const delta = targetProgress - currentProgress;
       
       if (Math.abs(delta) > 0.00001) {
@@ -185,6 +192,7 @@ export default function SatScrollHero() {
 
       if (clampedFrame !== frameRef.current) {
         frameRef.current = clampedFrame;
+        setCurrentFrame(clampedFrame + 1);
         draw(clampedFrame);
       }
 
@@ -196,7 +204,6 @@ export default function SatScrollHero() {
       animId = requestAnimationFrame(renderLoop);
     };
 
-    // Initialize position
     updateScrollTarget();
     currentProgress = targetProgress;
     const initialFrame = Math.round(currentProgress * (FRAME_COUNT - 1));
@@ -210,9 +217,9 @@ export default function SatScrollHero() {
       window.removeEventListener('scroll', updateScrollTarget);
       if (animId !== null) cancelAnimationFrame(animId);
     };
-  }, [isLoaded, draw]);
+  }, [draw]);
 
-  const scrollToDashboard = () => {
+  const scrollToWorkspace = () => {
     const el = document.getElementById('dashboard-section');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -223,9 +230,10 @@ export default function SatScrollHero() {
     <div
       ref={containerRef}
       style={{
-        height: '260vh',
+        height: '400vh',
         position: 'relative',
         width: '100%',
+        backgroundColor: '#030712',
       }}
     >
       <div
@@ -239,6 +247,16 @@ export default function SatScrollHero() {
           zIndex: 10,
         }}
       >
+        {/* Ambient starfield background glow */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.12) 0%, rgba(3, 7, 18, 0.9) 70%, #030712 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+
         {/* Canvas */}
         <canvas
           ref={canvasRef}
@@ -251,148 +269,241 @@ export default function SatScrollHero() {
           }}
         />
 
-        {/* Loading screen */}
-        {!isLoaded && <LoadingHUD progress={loadProgress} />}
+        {/* Loading screen if needed */}
+        {!isLoaded && loadProgress < 0.15 && <LoadingHUD progress={loadProgress} />}
 
-        {/* ── Cinematic Overlay HUD: Title & Mission Scope (Visible during orbital phase) ── */}
-        {isLoaded && (
+        {/* ── Futuristic Orbital HUD Overlay ── */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '2rem 3rem',
+            pointerEvents: 'none',
+            zIndex: 20,
+          }}
+        >
+          {/* Top Bar Header */}
           <div
             style={{
-              position: 'absolute',
-              inset: 0,
               display: 'flex',
-              flexDirection: 'column',
               justifyContent: 'space-between',
               alignItems: 'center',
-              padding: '2.5rem 2rem 3rem',
-              pointerEvents: 'none',
-              zIndex: 20,
+              width: '100%',
+              pointerEvents: 'auto',
             }}
           >
-            {/* Top Telemetry Header */}
             <div
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                maxWidth: '1350px',
+                gap: '0.75rem',
+                background: 'rgba(15, 23, 42, 0.75)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                backdropFilter: 'blur(16px)',
+                padding: '0.45rem 1.2rem',
+                borderRadius: '999px',
+                boxShadow: '0 0 20px rgba(56, 189, 248, 0.12)',
               }}
             >
-              <div
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#38bdf8',
+                  boxShadow: '0 0 10px #38bdf8',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                }}
+              />
+              <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#bae6fd', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>
+                ISRO SIH26167 · ORBITAL AI ENGINE
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#64748b', letterSpacing: '0.1em' }}>
+                FRAME: <strong style={{ color: '#38bdf8' }}>{String(currentFrame).padStart(3, '0')}</strong> / {FRAME_COUNT}
+              </span>
+              <button
+                onClick={scrollToWorkspace}
+                style={{
+                  background: 'rgba(14, 165, 233, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                  padding: '0.4rem 1rem',
+                  borderRadius: '8px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  letterSpacing: '0.08em',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(14, 165, 233, 0.3)';
+                  e.currentTarget.style.borderColor = '#38bdf8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(14, 165, 233, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+                }}
+              >
+                OPEN WORKSPACE ↗
+              </button>
+            </div>
+          </div>
+
+          {/* Center Pitch & Call to Action */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              maxWidth: '820px',
+              margin: '0 auto',
+              pointerEvents: 'auto',
+            }}
+          >
+            <h1
+              style={{
+                fontSize: 'clamp(2.5rem, 5vw, 4.2rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.03em',
+                lineHeight: 1.1,
+                marginBottom: '1rem',
+                color: '#ffffff',
+                textShadow: '0 0 40px rgba(56, 189, 248, 0.35)',
+              }}
+            >
+              SatQuery <span style={{
+                background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>AI</span>
+            </h1>
+
+            <p
+              style={{
+                fontSize: 'clamp(0.95rem, 1.5vw, 1.15rem)',
+                color: '#94a3b8',
+                lineHeight: 1.6,
+                marginBottom: '2rem',
+                maxWidth: '680px',
+              }}
+            >
+              Interactive vision-language assistant for multi-sensor satellite imagery.
+              Ask natural language queries across Optical, SAR, Bi-temporal change & spatial grounding.
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={scrollToWorkspace}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.6rem',
-                  padding: '6px 16px',
-                  borderRadius: '999px',
-                  background: 'rgba(3, 7, 18, 0.7)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  backdropFilter: 'blur(12px)',
-                }}
-              >
-                <span
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: '#38bdf8',
-                    boxShadow: '0 0 10px #38bdf8',
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono, monospace)',
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.15em',
-                    color: '#7dd3fc',
-                    fontWeight: 700,
-                  }}
-                >
-                  ISRO SIH26167 · ORBITAL COPILOT
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '0.75rem',
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: '0.72rem',
-                  color: 'rgba(148, 163, 184, 0.85)',
-                  background: 'rgba(3, 7, 18, 0.65)',
-                  padding: '5px 14px',
-                  borderRadius: '999px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
-                <span>SENSORS: OPTICAL + C-BAND SAR</span>
-                <span>•</span>
-                <span>DESCENT ENGINE ACTIVE</span>
-              </div>
-            </div>
-
-            {/* Spacer */}
-            <div style={{ flex: 1 }} />
-
-            {/* Bottom Floating Jump Bar & Prompt */}
-            <div
-              style={{
-                pointerEvents: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.8rem',
-              }}
-            >
-              <button
-                onClick={scrollToDashboard}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '12px 28px',
-                  borderRadius: '999px',
-                  background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.85) 0%, rgba(99, 102, 241, 0.85) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.35)',
-                  boxShadow: '0 8px 30px rgba(14, 165, 233, 0.4), 0 0 20px rgba(99, 102, 241, 0.3)',
+                  padding: '0.85rem 2rem',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
                   color: '#ffffff',
-                  fontSize: '0.88rem',
                   fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
+                  fontSize: '0.95rem',
+                  letterSpacing: '0.05em',
+                  border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 0 30px rgba(37, 99, 235, 0.45)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(14, 165, 233, 0.6), 0 0 25px rgba(99, 102, 241, 0.5)';
+                  e.currentTarget.style.boxShadow = '0 0 40px rgba(56, 189, 248, 0.6)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(14, 165, 233, 0.4), 0 0 20px rgba(99, 102, 241, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 0 30px rgba(37, 99, 235, 0.45)';
                 }}
               >
-                <span>Launch Analysis Workspace</span>
-                <span style={{ fontSize: '1.1rem', animation: 'bounce 1.5s infinite' }}>↓</span>
+                <span>LAUNCH QUERY COPILOT</span>
+                <span style={{ fontSize: '1.1rem' }}>↓</span>
               </button>
+            </div>
+          </div>
 
+          {/* Bottom Telemetry & Scroll Cue */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
+              width: '100%',
+              pointerEvents: 'auto',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '0.75rem',
+                color: '#64748b',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.3rem',
+              }}
+            >
+              <span>MODES: <strong style={{ color: '#38bdf8' }}>RGB · SENTINEL-2 · SAR · BI-TEMPORAL</strong></span>
+              <span>COMPLIANCE: <strong style={{ color: '#4ade80' }}>SIH26167 ISRO SPEC LIVE</strong></span>
+            </div>
+
+            <div
+              onClick={scrollToWorkspace}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.4rem',
+                cursor: 'pointer',
+                opacity: 0.85,
+              }}
+            >
               <span
                 style={{
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: '0.72rem',
-                  letterSpacing: '0.15em',
-                  color: '#64748b',
+                  fontFamily: 'monospace',
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.2em',
+                  color: '#38bdf8',
                   textTransform: 'uppercase',
                 }}
               >
-                Scroll down to zoom or click to start
+                SCROLL TO EXPLORE ORBIT
               </span>
+              <div
+                style={{
+                  width: '20px',
+                  height: '32px',
+                  borderRadius: '10px',
+                  border: '2px solid rgba(56, 189, 248, 0.4)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  paddingTop: '6px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '3px',
+                    height: '6px',
+                    backgroundColor: '#38bdf8',
+                    borderRadius: '2px',
+                    animation: 'bounce 1.5s infinite',
+                  }}
+                />
+              </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Exit gentle vignette fade into dashboard */}
         <div
@@ -400,7 +511,7 @@ export default function SatScrollHero() {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(3,7,18,0.5) 65%, rgba(3,7,18,1) 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(3,7,18,0.4) 60%, rgba(6,10,20,1) 100%)',
             pointerEvents: 'none',
             opacity: 0,
             transition: 'opacity 0.05s linear',

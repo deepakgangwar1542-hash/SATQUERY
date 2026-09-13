@@ -161,32 +161,35 @@ def analyze_scene_image(
     b_sel = b[mask]
     total_pixels = max(1, len(r_sel))
 
-    # 1. RGB visual water proxy: Blue dominant over Red/Green or deep dark water
-    is_water = ((b_sel > r_sel * 1.15) & (b_sel > g_sel * 0.95) & (r_sel < 110)) | ((b_sel > 30) & (r_sel < 35) & (g_sel < 50))
-    water_pct = float(np.sum(is_water) / total_pixels * 100)
+    # Photometric luminance: 0.299*R + 0.587*G + 0.114*B
+    brightness_arr = 0.299 * r_sel + 0.587 * g_sel + 0.114 * b_sel
 
-    # 2. RGB visual vegetation proxy: Green dominant over Red and Blue
-    is_veg = (g_sel > r_sel * 1.08) & (g_sel > b_sel * 1.05) & (g_sel > 35)
-    veg_pct = float(np.sum(is_veg) / total_pixels * 100)
-
-    # 3. RGB visual fire/flame proxy: High Red, low Blue
-    is_fire = (r_sel > 130) & (r_sel > g_sel * 1.25) & (r_sel > b_sel * 1.7)
+    # 1. RGB visual fire/flame proxy: High Red, low Blue (supports deep red, fiery orange, and yellow firefronts)
+    is_fire = (r_sel > 110) & (r_sel > b_sel * 1.35) & ((r_sel > g_sel * 1.05) | ((r_sel > 160) & (g_sel > 85) & (b_sel < 130)))
     fire_pct = float(np.sum(is_fire) / total_pixels * 100)
 
-    # 4. RGB visual burn/charred proxy: Dark red/brown ash
-    is_burn_scar = (r_sel > g_sel * 1.08) & (r_sel < 115) & (g_sel < 85) & (b_sel < 65) & (~is_fire)
+    # 2. RGB visual burn/charred proxy: Dark charcoal / brownish ash / charred ground (excluding active fire)
+    is_burn_scar = (((r_sel > g_sel * 1.05) & (r_sel < 130) & (g_sel < 95) & (b_sel < 80)) |
+                    ((brightness_arr < 55) & (r_sel < 65) & (g_sel < 65) & (b_sel < 70))) & (~is_fire)
     burn_pct = float(np.sum(is_burn_scar) / total_pixels * 100)
 
+    # 3. RGB visual water proxy: Clear Blue dominance, strictly excluding fire, burn scars, and dark ash
+    is_water = (((b_sel > r_sel * 1.25) & (b_sel > g_sel * 1.02) & (r_sel < 100)) |
+                ((b_sel > 35) & (r_sel < 30) & (g_sel < 45) & (b_sel > (r_sel + g_sel) * 0.6))) & (~is_fire) & (~is_burn_scar)
+    water_pct = float(np.sum(is_water) / total_pixels * 100)
+
+    # 4. RGB visual vegetation proxy: Green dominant over Red and Blue (excluding fire/burn)
+    is_veg = (g_sel > r_sel * 1.08) & (g_sel > b_sel * 1.05) & (g_sel > 35) & (~is_fire) & (~is_burn_scar)
+    veg_pct = float(np.sum(is_veg) / total_pixels * 100)
+
     # 5. RGB visual built-up proxy: Neutral grey reflectance
-    is_urban = (np.abs(r_sel - g_sel) < 22) & (np.abs(g_sel - b_sel) < 22) & (r_sel > 105)
+    is_urban = (np.abs(r_sel - g_sel) < 22) & (np.abs(g_sel - b_sel) < 22) & (r_sel > 105) & (~is_fire) & (~is_burn_scar) & (~is_water)
     urban_pct = float(np.sum(is_urban) / total_pixels * 100)
 
     # 6. RGB visual barren/soil proxy: Warm earth tones
-    is_barren = (r_sel > b_sel * 1.25) & (g_sel > b_sel * 1.05) & (~is_veg) & (~is_fire) & (~is_burn_scar)
+    is_barren = (r_sel > b_sel * 1.25) & (g_sel > b_sel * 1.05) & (~is_veg) & (~is_fire) & (~is_burn_scar) & (~is_urban) & (~is_water)
     barren_pct = float(np.sum(is_barren) / total_pixels * 100)
 
-    # Photometric luminance: 0.299*R + 0.587*G + 0.114*B
-    brightness_arr = 0.299 * r_sel + 0.587 * g_sel + 0.114 * b_sel
     mean_brightness = float(np.mean(brightness_arr))
     std_brightness = float(np.std(brightness_arr))
     min_brightness = float(np.min(brightness_arr))
