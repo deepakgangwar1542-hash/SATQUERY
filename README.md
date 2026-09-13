@@ -105,11 +105,11 @@ SatQuery AI introduces a guided, step-by-step intelligence walkthrough where one
 | Step | View Title | Focus Area | Visual & Analytical Payoff |
 | :---: | :--- | :--- | :--- |
 | **00** | **Mission Setup** | Input Initialization | Dual PRE/POST observation cards, natural language query input, Web Speech API voice transcription, polygon ROI drawing studio, and instant sample dataset presets. |
-| **01** | **Observations** | Raw Satellite Telemetry | High-resolution side-by-side comparison of T₁ baseline and T₂ target imagery, EarthQuery classification intent, and sensor hints. |
-| **02** | **What Changed?** | Differential Dynamics | Triptych view (T₁ $\mid$ $\Delta t$ Change Dynamics $\mid$ T₂), ChangeFormer metrics ($\text{km}^2$ area, change extent %, severity level). |
-| **03** | **Where Did It Happen?** | Spatial Grounding | Interactive visual canvas with color-coded bounding boxes, polygon ROI overlays, detected structures, and georeferenced coordinates. |
-| **04** | **Why Do We Believe It?** | Multi-Agent Consensus | Verifier agreement banner, conflict arbitration notes, sensor selection rationale, and individual specialist agent output cards. |
-| **05** | **Mission Finding** | Primary Intelligence | High-impact verified answer, Multimodal Semantic Reasoning (VLM) scene observations, uncertainty boundaries, and 1-click PDF download report. |
+| **01** | **Mission Finding** | Primary Intelligence | Instant high-impact verified answer, Multimodal Semantic Reasoning (VLM) scene observations, uncertainty boundaries, and 1-click PDF mission report export. |
+| **02** | **Observations** | Raw Satellite Telemetry | High-resolution side-by-side comparison of T₁ baseline and T₂ target imagery, EarthQuery classification intent, and sensor hints. |
+| **03** | **What Changed?** | Differential Dynamics | Triptych view (T₁ $\mid$ $\Delta t$ Change Dynamics $\mid$ T₂), ChangeFormer metrics ($\text{km}^2$ area, change extent %, severity level). |
+| **04** | **Where Did It Happen?** | Spatial Grounding | Interactive visual canvas with color-coded bounding boxes, polygon ROI overlays, detected structures, and georeferenced coordinates. |
+| **05** | **Why Do We Believe It?** | Multi-Agent Consensus | Verifier agreement banner, conflict arbitration notes, sensor selection rationale, and individual specialist agent output cards. |
 | **06** | **Confidence & Provenance** | Trust & Transparency | 6-Component confidence radar chart, component bar gauges, and clickable end-to-end execution trace graph. |
 
 ---

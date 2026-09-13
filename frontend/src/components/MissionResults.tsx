@@ -1,11 +1,11 @@
 /**
  * MissionResults — 6-Step Guided Mission Workflow Container.
  * Reuses the EXACT QueryResponse result across 6 specialized cinematic views:
- *   Step 1: 01 / 06 OBSERVATIONS (Pre vs Post imagery, Query Intent, Telemetry)
- *   Step 2: 02 / 06 WHAT CHANGED? (Bi-Temporal Difference, ChangeFormer Metrics)
- *   Step 3: 03 / 06 WHERE DID IT HAPPEN? (Spatial Impact, Polygons, Bounding Boxes)
- *   Step 4: 04 / 06 WHY DO WE BELIEVE IT? (Evidence Fusion, Verifier, Agent Outputs)
- *   Step 5: 05 / 06 MISSION FINDING (Visual Payoff, VLM Reasoning, PDF Report)
+ *   Step 1: 01 / 06 MISSION FINDING (Visual Payoff, Verified Answer, VLM Reasoning, PDF Report)
+ *   Step 2: 02 / 06 OBSERVATIONS (Pre vs Post imagery, Query Intent, Telemetry)
+ *   Step 3: 03 / 06 WHAT CHANGED? (Bi-Temporal Difference, ChangeFormer Metrics)
+ *   Step 4: 04 / 06 WHERE DID IT HAPPEN? (Spatial Impact, Polygons, Bounding Boxes)
+ *   Step 5: 05 / 06 WHY DO WE BELIEVE IT? (Evidence Fusion, Verifier, Agent Outputs)
  *   Step 6: 06 / 06 CONFIDENCE & PROVENANCE (6-Comp Radar Chart, Execution Trace)
  */
 import React, { useState, useMemo } from 'react';
@@ -28,11 +28,11 @@ export interface MissionResultsProps {
 }
 
 const STEP_TITLES = [
-  { step: 1, num: '01', title: 'OBSERVATIONS', subtitle: 'Pre & Post Satellite Feeds' },
-  { step: 2, num: '02', title: 'WHAT CHANGED?', subtitle: 'Bi-Temporal Difference & Metrics' },
-  { step: 3, num: '03', title: 'WHERE DID IT HAPPEN?', subtitle: 'Spatial Footprint & ROI Grounding' },
-  { step: 4, num: '04', title: 'WHY DO WE BELIEVE IT?', subtitle: 'Evidence Fusion & Multi-Agent Verification' },
-  { step: 5, num: '05', title: 'MISSION FINDING', subtitle: 'Verified Intelligence & VLM Insights' },
+  { step: 1, num: '01', title: 'MISSION FINDING', subtitle: 'Verified Intelligence & VLM Insights' },
+  { step: 2, num: '02', title: 'OBSERVATIONS', subtitle: 'Pre & Post Satellite Feeds' },
+  { step: 3, num: '03', title: 'WHAT CHANGED?', subtitle: 'Bi-Temporal Difference & Metrics' },
+  { step: 4, num: '04', title: 'WHERE DID IT HAPPEN?', subtitle: 'Spatial Footprint & ROI Grounding' },
+  { step: 5, num: '05', title: 'WHY DO WE BELIEVE IT?', subtitle: 'Evidence Fusion & Multi-Agent Verification' },
   { step: 6, num: '06', title: 'CONFIDENCE & PROVENANCE', subtitle: '6-Factor Radar & Execution Audit' },
 ];
 
@@ -134,12 +134,108 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
       {/* ── Step Content Display ── */}
       <main className="mission-step-viewport">
         {/* ============================================================== */}
-        {/* STEP 1: 01 / 06 OBSERVATIONS                                   */}
+        {/* STEP 1: 01 / 06 MISSION FINDING (Visual Payoff)                */}
         {/* ============================================================== */}
         {currentStep === 1 && (
-          <section className="mission-step-view fade-in-up" id="step-observations">
+          <section className="mission-step-view fade-in-up" id="step-finding">
             <div className="step-view-header">
               <span className="step-number-tag">STEP 01 / 06</span>
+              <h2 className="step-view-title">Mission Finding</h2>
+              <p className="step-view-desc">
+                High-confidence synthesized intelligence report, natural language findings, and actionable insights.
+              </p>
+            </div>
+
+            {/* Primary Visual Payoff Card */}
+            <div className="card answer-payoff-card mb-4" id="primary-finding-card">
+              <div className="answer-card-top">
+                <div className="flex items-center gap-2">
+                  <span className="payoff-badge-icon">💡</span>
+                  <div>
+                    <span className="payoff-label">SYNTHESIZED INTELLIGENCE FINDING</span>
+                    <h3 className="payoff-title">Verified Answer</h3>
+                  </div>
+                </div>
+                <span className="badge badge-cyan">Ground-Truth Verified</span>
+              </div>
+
+              <div className="payoff-answer-content">
+                <p className="answer-primary-text">{response.answer}</p>
+              </div>
+
+              <div className="payoff-footer">
+                <a
+                  href={response.report_url}
+                  download
+                  className="btn btn-primary btn-sm download-pdf-btn"
+                  id="download-report-btn"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  📄 Download Comprehensive PDF Report
+                </a>
+                <span className="text-xs text-muted">Trace ID: <code className="text-mono">{response.execution_trace.trace_id}</code></span>
+              </div>
+            </div>
+
+            {/* Multimodal Semantic Reasoning / VLM Context if present */}
+            {vlm && (
+              <div className="vlm-reasoning-card card mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: '1.2rem' }}>🧠</span>
+                    <div>
+                      <p className="section-label" style={{ margin: 0 }}>Multimodal Semantic Reasoner (VLM)</p>
+                      <span className="text-xs text-muted">Model: {vlm.model_name} · Mode: {vlm.reasoning_mode}</span>
+                    </div>
+                  </div>
+                  <span className="badge badge-purple">Structured Reasoning</span>
+                </div>
+
+                {vlm.observations && vlm.observations.length > 0 && (
+                  <div className="vlm-section mb-3">
+                    <span className="vlm-section-title">Key Scene Observations:</span>
+                    <ul className="vlm-bullet-list">
+                      {vlm.observations.map((obs, idx) => (
+                        <li key={idx}>{obs}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {vlm.interpretation && vlm.interpretation.length > 0 && (
+                  <div className="vlm-section mb-3">
+                    <span className="vlm-section-title">Semantic Interpretation:</span>
+                    <ul className="vlm-bullet-list">
+                      {vlm.interpretation.map((interp, idx) => (
+                        <li key={idx}>{interp}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {vlm.uncertainties && vlm.uncertainties.length > 0 && (
+                  <div className="vlm-uncertainty-box">
+                    <span className="text-xs text-warning font-bold">Uncertainties & Sensor Limitations:</span>
+                    <ul className="vlm-bullet-list text-muted">
+                      {vlm.uncertainties.map((u, idx) => (
+                        <li key={idx} className="text-xs">{u}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ============================================================== */}
+        {/* STEP 2: 02 / 06 OBSERVATIONS                                   */}
+        {/* ============================================================== */}
+        {currentStep === 2 && (
+          <section className="mission-step-view fade-in-up" id="step-observations">
+            <div className="step-view-header">
+              <span className="step-number-tag">STEP 02 / 06</span>
               <h2 className="step-view-title">Primary Observations</h2>
               <p className="step-view-desc">
                 Raw multispectral or SAR observation frames captured across target timestamps.
@@ -195,12 +291,12 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
         )}
 
         {/* ============================================================== */}
-        {/* STEP 2: 02 / 06 WHAT CHANGED?                                  */}
+        {/* STEP 3: 03 / 06 WHAT CHANGED?                                  */}
         {/* ============================================================== */}
-        {currentStep === 2 && (
+        {currentStep === 3 && (
           <section className="mission-step-view fade-in-up" id="step-change">
             <div className="step-view-header">
-              <span className="step-number-tag">STEP 02 / 06</span>
+              <span className="step-number-tag">STEP 03 / 06</span>
               <h2 className="step-view-title">What Changed?</h2>
               <p className="step-view-desc">
                 Bi-temporal differential analysis, pixel mask transitions, and change magnitude.
@@ -322,12 +418,12 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
         )}
 
         {/* ============================================================== */}
-        {/* STEP 3: 03 / 06 WHERE DID IT HAPPEN?                          */}
+        {/* STEP 4: 04 / 06 WHERE DID IT HAPPEN?                          */}
         {/* ============================================================== */}
-        {currentStep === 3 && (
+        {currentStep === 4 && (
           <section className="mission-step-view fade-in-up" id="step-spatial">
             <div className="step-view-header">
-              <span className="step-number-tag">STEP 03 / 06</span>
+              <span className="step-number-tag">STEP 04 / 06</span>
               <h2 className="step-view-title">Where Did It Happen?</h2>
               <p className="step-view-desc">
                 Spatial bounding boxes, marked ROI contours, and geographical ground truth.
@@ -427,12 +523,12 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
         )}
 
         {/* ============================================================== */}
-        {/* STEP 4: 04 / 06 WHY DO WE BELIEVE IT?                          */}
+        {/* STEP 5: 05 / 06 WHY DO WE BELIEVE IT?                          */}
         {/* ============================================================== */}
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <section className="mission-step-view fade-in-up" id="step-evidence">
             <div className="step-view-header">
-              <span className="step-number-tag">STEP 04 / 06</span>
+              <span className="step-number-tag">STEP 05 / 06</span>
               <h2 className="step-view-title">Why Do We Believe It?</h2>
               <p className="step-view-desc">
                 Multi-agent cross-verification, specialist consensus, sensor selection, and conflict resolution.
@@ -488,102 +584,6 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
                 ))}
               </div>
             </div>
-          </section>
-        )}
-
-        {/* ============================================================== */}
-        {/* STEP 5: 05 / 06 MISSION FINDING                                */}
-        {/* ============================================================== */}
-        {currentStep === 5 && (
-          <section className="mission-step-view fade-in-up" id="step-finding">
-            <div className="step-view-header">
-              <span className="step-number-tag">STEP 05 / 06</span>
-              <h2 className="step-view-title">Mission Finding</h2>
-              <p className="step-view-desc">
-                High-confidence synthesized intelligence report, natural language findings, and actionable insights.
-              </p>
-            </div>
-
-            {/* Visual Payoff: Primary Answer Hero Card */}
-            <div className="card answer-payoff-card mb-4" id="primary-finding-card">
-              <div className="answer-card-top">
-                <div className="flex items-center gap-2">
-                  <span className="payoff-badge-icon">💡</span>
-                  <div>
-                    <span className="payoff-label">SYNTHESIZED INTELLIGENCE FINDING</span>
-                    <h3 className="payoff-title">Verified Answer</h3>
-                  </div>
-                </div>
-                <span className="badge badge-cyan">Ground-Truth Verified</span>
-              </div>
-
-              <div className="payoff-answer-content">
-                <p className="answer-primary-text">{response.answer}</p>
-              </div>
-
-              <div className="payoff-footer">
-                <a
-                  href={response.report_url}
-                  download
-                  className="btn btn-primary btn-sm download-pdf-btn"
-                  id="download-report-btn"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  📄 Download Comprehensive PDF Report
-                </a>
-                <span className="text-xs text-muted">Trace ID: <code className="text-mono">{response.execution_trace.trace_id}</code></span>
-              </div>
-            </div>
-
-            {/* Multimodal Semantic Reasoning / VLM Context if present */}
-            {vlm && (
-              <div className="vlm-reasoning-card card mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span style={{ fontSize: '1.2rem' }}>🧠</span>
-                    <div>
-                      <p className="section-label" style={{ margin: 0 }}>Multimodal Semantic Reasoner (VLM)</p>
-                      <span className="text-xs text-muted">Model: {vlm.model_name} · Mode: {vlm.reasoning_mode}</span>
-                    </div>
-                  </div>
-                  <span className="badge badge-purple">Structured Reasoning</span>
-                </div>
-
-                {vlm.observations && vlm.observations.length > 0 && (
-                  <div className="vlm-section mb-3">
-                    <span className="vlm-section-title">Key Scene Observations:</span>
-                    <ul className="vlm-bullet-list">
-                      {vlm.observations.map((obs, idx) => (
-                        <li key={idx}>{obs}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {vlm.interpretation && vlm.interpretation.length > 0 && (
-                  <div className="vlm-section mb-3">
-                    <span className="vlm-section-title">Semantic Interpretation:</span>
-                    <ul className="vlm-bullet-list">
-                      {vlm.interpretation.map((interp, idx) => (
-                        <li key={idx}>{interp}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {vlm.uncertainties && vlm.uncertainties.length > 0 && (
-                  <div className="vlm-uncertainty-box">
-                    <span className="text-xs text-warning font-bold">Uncertainties & Sensor Limitations:</span>
-                    <ul className="vlm-bullet-list text-muted">
-                      {vlm.uncertainties.map((u, idx) => (
-                        <li key={idx} className="text-xs">{u}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
           </section>
         )}
 
@@ -835,7 +835,88 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
           margin: 0;
         }
 
-        /* Step 1: Observations */
+        /* Step 1: Finding */
+        .answer-payoff-card {
+          padding: 2rem 2.5rem;
+          background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.98));
+          border: 1.5px solid rgba(56, 189, 248, 0.4);
+          border-left: 5px solid #38bdf8;
+          box-shadow: 0 25px 60px -10px rgba(0,0,0,0.85), 0 0 45px rgba(56, 189, 248, 0.2);
+          border-radius: 16px;
+        }
+        .answer-card-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.25rem;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+        .payoff-badge-icon { font-size: 1.8rem; }
+        .payoff-label {
+          font-family: var(--font-mono);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          color: #38bdf8;
+          display: block;
+        }
+        .payoff-title { font-size: 1.3rem; font-weight: 800; color: #ffffff; margin: 0; }
+        .payoff-answer-content {
+          margin: 1.25rem 0 1.75rem;
+          padding: 1.25rem 1.5rem;
+          background: rgba(3, 7, 18, 0.75);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 10px;
+        }
+        .answer-primary-text {
+          font-size: 1.12rem;
+          line-height: 1.8;
+          color: #f8fafc;
+          font-weight: 500;
+          white-space: pre-wrap;
+          margin: 0;
+        }
+        .payoff-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+        .download-pdf-btn {
+          padding: 0.65rem 1.4rem;
+          font-weight: 700;
+          font-size: 0.85rem;
+        }
+        .vlm-reasoning-card {
+          border-color: rgba(168, 85, 247, 0.3);
+          background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(8, 14, 28, 0.95));
+        }
+        .vlm-section-title {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #d8b4fe;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          display: block;
+          margin-bottom: 0.4rem;
+        }
+        .vlm-bullet-list {
+          padding-left: 1.25rem;
+          font-size: 0.86rem;
+          color: var(--text-secondary);
+          line-height: 1.7;
+        }
+        .vlm-uncertainty-box {
+          margin-top: 0.75rem;
+          padding: 0.65rem 1rem;
+          background: rgba(245, 158, 11, 0.08);
+          border: 1px solid rgba(245, 158, 11, 0.25);
+          border-radius: 8px;
+        }
+
+        /* Step 2: Observations */
         .observations-display-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -894,7 +975,7 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
           max-height: 480px;
         }
 
-        /* Step 2: Change */
+        /* Step 3: Change */
         .change-triptych {
           display: grid;
           grid-template-columns: 1fr 1.3fr 1fr;
@@ -1000,7 +1081,7 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
         .metric-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
         .metric-value { font-size: 1.15rem; font-weight: 800; color: #f8fafc; }
 
-        /* Step 3: Spatial */
+        /* Step 4: Spatial */
         .spatial-inspection-stage {
           display: grid;
           grid-template-columns: 1fr 340px;
@@ -1096,7 +1177,7 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
           padding: 0.75rem;
         }
 
-        /* Step 4: Evidence */
+        /* Step 5: Evidence */
         .verifier-decision-card {
           border-left: 4px solid;
         }
@@ -1118,87 +1199,6 @@ export default function MissionResults({ response, requestMeta, onNewMission }: 
         }
         .conflict-list { padding-left: 1rem; margin-top: 0.25rem; }
         .agent-list-stack { display: flex; flex-direction: column; gap: 0.85rem; }
-
-        /* Step 5: Finding */
-        .answer-payoff-card {
-          padding: 2rem 2.5rem;
-          background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.98));
-          border: 1.5px solid rgba(56, 189, 248, 0.4);
-          border-left: 5px solid #38bdf8;
-          box-shadow: 0 25px 60px -10px rgba(0,0,0,0.85), 0 0 45px rgba(56, 189, 248, 0.2);
-          border-radius: 16px;
-        }
-        .answer-card-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.25rem;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-        }
-        .payoff-badge-icon { font-size: 1.8rem; }
-        .payoff-label {
-          font-family: var(--font-mono);
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          color: #38bdf8;
-          display: block;
-        }
-        .payoff-title { font-size: 1.3rem; font-weight: 800; color: #ffffff; margin: 0; }
-        .payoff-answer-content {
-          margin: 1.25rem 0 1.75rem;
-          padding: 1.25rem 1.5rem;
-          background: rgba(3, 7, 18, 0.75);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 10px;
-        }
-        .answer-primary-text {
-          font-size: 1.12rem;
-          line-height: 1.8;
-          color: #f8fafc;
-          font-weight: 500;
-          white-space: pre-wrap;
-          margin: 0;
-        }
-        .payoff-footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 1rem;
-        }
-        .download-pdf-btn {
-          padding: 0.65rem 1.4rem;
-          font-weight: 700;
-          font-size: 0.85rem;
-        }
-        .vlm-reasoning-card {
-          border-color: rgba(168, 85, 247, 0.3);
-          background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(8, 14, 28, 0.95));
-        }
-        .vlm-section-title {
-          font-size: 0.78rem;
-          font-weight: 700;
-          color: #d8b4fe;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          display: block;
-          margin-bottom: 0.4rem;
-        }
-        .vlm-bullet-list {
-          padding-left: 1.25rem;
-          font-size: 0.86rem;
-          color: var(--text-secondary);
-          line-height: 1.7;
-        }
-        .vlm-uncertainty-box {
-          margin-top: 0.75rem;
-          padding: 0.65rem 1rem;
-          background: rgba(245, 158, 11, 0.08);
-          border: 1px solid rgba(245, 158, 11, 0.25);
-          border-radius: 8px;
-        }
 
         /* Step 6: Trust */
         .trust-grid {
