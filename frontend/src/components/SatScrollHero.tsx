@@ -4,8 +4,8 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 // ── Config ──────────────────────────────────────────────────────────────────
 const FRAME_COUNT = 360;
 const FRAME_START = 1;
-const SEQ_PATH    = '/SATQUERY-SEQUENCE/sat_';
-const SEQ_EXT     = '.webp';
+const SEQ_PATH = '/SATQUERY-SEQUENCE/sat_';
+const SEQ_EXT = '.webp';
 
 function frameSrc(i: number) {
   return `${SEQ_PATH}${String(i).padStart(3, '0')}${SEQ_EXT}`;
@@ -13,8 +13,8 @@ function frameSrc(i: number) {
 
 // ── Loading HUD ──────────────────────────────────────────────────────────────
 function LoadingHUD({ progress }: { progress: number }) {
-  const pct  = Math.round(progress * 100);
-  const r    = 54;
+  const pct = Math.round(progress * 100);
+  const r = 54;
   const circ = 2 * Math.PI * r;
   return (
     <div
@@ -56,15 +56,15 @@ function LoadingHUD({ progress }: { progress: number }) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function SatScrollHero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const vignetteRef  = useRef<HTMLDivElement>(null);
-  const ctxRef       = useRef<CanvasRenderingContext2D | null>(null);
-  const imagesRef    = useRef<HTMLImageElement[]>([]);
-  const frameRef     = useRef(0);
-  const rafRef       = useRef<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const vignetteRef = useRef<HTMLDivElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const frameRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
 
   const [loadProgress, setLoadProgress] = useState(0);
-  const [isLoaded,     setIsLoaded]     = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(1);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -75,7 +75,7 @@ export default function SatScrollHero() {
     const clampedIdx = Math.max(0, Math.min(FRAME_COUNT - 1, idx));
     const img = imagesRef.current[clampedIdx];
     if (!canvas || !img || !img.complete || img.naturalWidth === 0) return;
-    
+
     if (!ctxRef.current) {
       ctxRef.current = canvas.getContext('2d');
     }
@@ -88,8 +88,8 @@ export default function SatScrollHero() {
     if (cw === 0 || ch === 0) return;
 
     const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-    const sw    = img.naturalWidth  * scale;
-    const sh    = img.naturalHeight * scale;
+    const sw = img.naturalWidth * scale;
+    const sh = img.naturalHeight * scale;
 
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(img, (cw - sw) / 2, (ch - sh) / 2, sw, sh);
@@ -107,11 +107,11 @@ export default function SatScrollHero() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width  = window.innerWidth  * dpr;
+    canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
-    canvas.style.width  = `${window.innerWidth}px`;
+    canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
-    
+
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -143,7 +143,7 @@ export default function SatScrollHero() {
           setIsLoaded(true);
         }
       };
-      img.onload  = onDone;
+      img.onload = onDone;
       img.onerror = onDone;
       imgs.push(img);
     }
@@ -172,7 +172,7 @@ export default function SatScrollHero() {
       const rect = container.getBoundingClientRect();
       const totalScrollable = container.offsetHeight - window.innerHeight;
       if (totalScrollable <= 0) return;
-      
+
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / totalScrollable));
       targetProgress = progress;
@@ -180,7 +180,7 @@ export default function SatScrollHero() {
 
     const renderLoop = () => {
       const delta = targetProgress - currentProgress;
-      
+
       if (Math.abs(delta) > 0.00001) {
         currentProgress += delta * 0.18;
       } else {
@@ -328,32 +328,7 @@ export default function SatScrollHero() {
               <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#64748b', letterSpacing: '0.1em' }}>
                 FRAME: <strong style={{ color: '#38bdf8' }}>{String(currentFrame).padStart(3, '0')}</strong> / {FRAME_COUNT}
               </span>
-              <button
-                onClick={scrollToWorkspace}
-                style={{
-                  background: 'rgba(14, 165, 233, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.4)',
-                  color: '#38bdf8',
-                  padding: '0.4rem 1rem',
-                  borderRadius: '8px',
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  letterSpacing: '0.08em',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(14, 165, 233, 0.3)';
-                  e.currentTarget.style.borderColor = '#38bdf8';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(14, 165, 233, 0.15)';
-                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.4)';
-                }}
-              >
-                OPEN WORKSPACE ↗
-              </button>
+
             </div>
           </div>
 
@@ -380,11 +355,11 @@ export default function SatScrollHero() {
                 textShadow: '0 0 40px rgba(56, 189, 248, 0.35)',
               }}
             >
-              SatQuery <span style={{
+              <span style={{
                 background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-              }}>AI</span>
+              }}></span>
             </h1>
 
             <p
@@ -396,42 +371,9 @@ export default function SatScrollHero() {
                 maxWidth: '680px',
               }}
             >
-              Interactive vision-language assistant for multi-sensor satellite imagery.
-              Ask natural language queries across Optical, SAR, Bi-temporal change & spatial grounding.
             </p>
 
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                onClick={scrollToWorkspace}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  padding: '0.85rem 2rem',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  letterSpacing: '0.05em',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 0 30px rgba(37, 99, 235, 0.45)',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 0 40px rgba(56, 189, 248, 0.6)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(37, 99, 235, 0.45)';
-                }}
-              >
-                <span>LAUNCH QUERY COPILOT</span>
-                <span style={{ fontSize: '1.1rem' }}>↓</span>
-              </button>
-            </div>
+
           </div>
 
           {/* Bottom Telemetry & Scroll Cue */}

@@ -1,17 +1,16 @@
 /**
  * App — SatQuery AI main application shell.
  *
- * Layout:
- *   - Fixed navbar with ISRO branding and PS reference
- *   - Hero section with animated pitch
- *   - Two-column layout: QueryComposer (left) | ResultsPanel (right)
- *   - Loading skeleton state
- *   - Error display
+ * Guided Mission Flow:
+ *   - Cinematic Parallax Scroll Landing (SatScrollHero)
+ *   - Mission Setup (MissionSetup: Pre/Post Uploads, Query Composer, ROI Visualizer)
+ *   - Single Backend Inference Execution (/query/analyze)
+ *   - 6-Step Guided Mission Workflow (MissionResults: 01 Observes -> 02 Change -> 03 Impact -> 04 Evidence -> 05 Finding -> 06 Trust)
  */
 import { useState, useCallback } from 'react';
 import type { QueryResponse, QueryRequest } from './types';
-import QueryComposer from './components/QueryComposer';
-import ResultsPanel from './components/ResultsPanel';
+import MissionSetup from './components/MissionSetup';
+import MissionResults from './components/MissionResults';
 import EarthGlobeBackground, { resolveLocationFromQuery, type GeoTarget } from './components/EarthGlobeBackground';
 import SatScrollHero from './components/SatScrollHero';
 import CursorReactiveBackground from './components/CursorReactiveBackground';
@@ -34,11 +33,21 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<GeoTarget | null>(null);
+  const [requestMeta, setRequestMeta] = useState<{
+    prePreview?: string;
+    postPreview?: string;
+    preName?: string;
+    postName?: string;
+  }>({});
 
-  const handleAnalyze = useCallback(async (req: QueryRequest) => {
+  const handleAnalyze = useCallback(async (
+    req: QueryRequest,
+    meta: { prePreview?: string; postPreview?: string; preName?: string; postName?: string } = {}
+  ) => {
     setLoading(true);
     setError(null);
     setResponse(null);
+    setRequestMeta(meta);
 
     // Immediately resolve location if mentioned in query to start 3D camera fly-to
     const preTarget = resolveLocationFromQuery(req.question);
@@ -63,12 +72,23 @@ export default function App() {
     }
   }, []);
 
+  const handleNewMission = useCallback(() => {
+    setResponse(null);
+    setError(null);
+    setTargetLocation(null);
+    // Smooth scroll back to mission setup
+    const el = document.getElementById('dashboard-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
   return (
     <div className="app bg-[#030712]" style={{ backgroundColor: '#030712' }}>
-      {/* ── 01: Flagship 360-Frame Cinematic Earth Scroll Hero (First Page Only) ── */}
+      {/* ── 01: Flagship 360-Frame Cinematic Earth Scroll Hero (Parallax Landing) ── */}
       <SatScrollHero />
 
-      {/* ── 02: Full Friend UI & Mission Dashboard (Smooth Atmospheric Transition) ── */}
+      {/* ── 02: Guided Mission Environment & Atmospheric Container ── */}
       <div
         className="dashboard-container"
         id="dashboard-section"
@@ -94,7 +114,7 @@ export default function App() {
           }}
         />
 
-        {/* Quick Tactical Mission Lock-In Strip */}
+        {/* Tactical Mission Lock-In Telemetry Strip */}
         <div
           style={{
             position: 'relative',
@@ -153,10 +173,10 @@ export default function App() {
           onResetTarget={() => setTargetLocation(null)}
         />
 
-        {/* ── Navbar ──────────────────────────────────────────────────── */}
+        {/* ── Fixed Aerospace Navbar ── */}
         <nav className="navbar" id="main-navbar" style={{ position: 'relative', zIndex: 20 }}>
           <div className="navbar-inner">
-            <div className="nav-brand">
+            <div className="nav-brand" onClick={handleNewMission} style={{ cursor: 'pointer' }}>
               <div className="nav-logo">🛰</div>
               <div>
                 <h1 className="nav-title gradient-text">SatQuery AI</h1>
@@ -171,45 +191,30 @@ export default function App() {
           </div>
         </nav>
 
-        {/* ── Hero ────────────────────────────────────────────────────── */}
-        <header className="hero" id="hero-section" style={{ position: 'relative', zIndex: 10 }}>
-          <div className="hero-orb hero-orb-1" />
-          <div className="hero-orb hero-orb-2" />
-          <div className="hero-orb hero-orb-3" />
-          <div className="hero-content">
-            <div className="hero-badge fade-in">
-              <span>🏆</span>
-              <span>ISRO Problem Statement SIH26167</span>
-            </div>
-            <h1 className="hero-title fade-in-up" style={{ animationDelay: '0.05s' }}>
-              Ask anything about<br />
-              <span className="gradient-text">satellite imagery</span>
-            </h1>
-            <p className="hero-desc fade-in-up" style={{ animationDelay: '0.1s' }}>
-              Multimodal VQA · Change Detection · SAR-Optical Fusion · Visual Grounding · Agentic Pipeline
-            </p>
-            <div className="hero-pills fade-in-up" style={{ animationDelay: '0.15s' }}>
-              {['BLIP-2 VQA', 'ChangeFormer', 'SAM Grounding', 'GF-SARNet', '6-Component Confidence', 'Voice Input'].map(p => (
-                <span key={p} className="hero-pill">{p}</span>
-              ))}
-            </div>
-          </div>
-        </header>
+        {/* ── Guided Mission Flow Stage ── */}
+        <main className="mission-stage-main" id="main-workspace" style={{ position: 'relative', zIndex: 20 }}>
+          {/* State 1: Pipeline Loading Telemetry State */}
+          {loading && <LoadingSkeleton />}
 
-        {/* ── Main workspace ──────────────────────────────────────────── */}
-        <main className="workspace" id="main-workspace" style={{ position: 'relative', zIndex: 10 }}>
-          {/* Left: Query input */}
-          <section className="workspace-left" aria-label="Query input">
-            <QueryComposer onAnalyze={handleAnalyze} loading={loading} />
-          </section>
+          {/* State 2: Pipeline Error Display */}
+          {error && <ErrorCard message={error} onRetry={handleNewMission} />}
 
-          {/* Right: Results */}
-          <section className="workspace-right" aria-label="Analysis results">
-            {loading && <LoadingSkeleton />}
-            {error && <ErrorCard message={error} />}
-            {response && !loading && <ResultsPanel response={response} />}
-            {!loading && !error && !response && <EmptyState />}
-          </section>
+          {/* State 3: Guided 6-Step Mission Workflow View */}
+          {response && !loading && (
+            <MissionResults
+              response={response}
+              requestMeta={requestMeta}
+              onNewMission={handleNewMission}
+            />
+          )}
+
+          {/* State 4: Initial Mission Setup View */}
+          {!loading && !response && (
+            <MissionSetup
+              onAnalyze={handleAnalyze}
+              loading={loading}
+            />
+          )}
         </main>
       </div>
 
@@ -231,66 +236,13 @@ export default function App() {
         .nav-subtitle { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; }
         .nav-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
-        /* Hero */
-        .hero {
-          position: relative; overflow: hidden;
-          padding: 3.5rem 2rem 3rem; text-align: center;
-        }
-        .hero-orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
-        .hero-orb-1 { width: 400px; height: 400px; background: rgba(59,130,246,0.12); top: -100px; left: -100px; }
-        .hero-orb-2 { width: 350px; height: 350px; background: rgba(139,92,246,0.10); top: -50px; right: -80px; }
-        .hero-orb-3 { width: 300px; height: 300px; background: rgba(6,182,212,0.08); bottom: -80px; left: 50%; transform: translateX(-50%); }
-        .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
-        .hero-badge {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-          border-radius: 999px; padding: 5px 16px; font-size: 0.78rem; font-weight: 600;
-          color: var(--text-accent); margin-bottom: 1.25rem;
-        }
-        .hero-title { margin-bottom: 0.8rem; letter-spacing: -0.02em; }
-        .hero-desc { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem; }
-        .hero-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
-        .hero-pill {
-          padding: 3px 12px; background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08); border-radius: 999px;
-          font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+        .mission-stage-main {
+          width: 100%;
+          min-height: calc(100vh - 80px);
         }
 
-        /* Workspace — Half screen 50/50 layout */
-        .workspace {
-          flex: 1;
-          display: grid;
-          grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-          gap: 2rem;
-          padding: 1.5rem 2rem 4rem;
-          max-width: 1750px;
-          margin: 0 auto;
-          width: 96%;
-          align-items: start;
-        }
-        .workspace-left {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          position: sticky;
-          top: 80px;
-          min-width: 0;
-        }
-        .workspace-right {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        @media (max-width: 1200px) {
-          .workspace { grid-template-columns: 1fr; max-width: 1000px; }
-          .workspace-left { position: static; }
-        }
         @media (max-width: 600px) {
           .navbar { padding: 0.6rem 1rem; }
-          .workspace { padding: 1rem; width: 100%; }
-          .hero { padding: 2rem 1rem; }
           .nav-badges .badge:nth-child(n+3) { display: none; }
         }
       `}</style>
@@ -298,61 +250,182 @@ export default function App() {
   );
 }
 
-
-
-// ── Loading skeleton ──────────────────────────────────────────────────────────
+// ── Orbital Telemetry Loading Skeleton ──────────────────────────────────────────
 function LoadingSkeleton() {
   return (
-    <div className="loading-skeleton fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {[200, 120, 160, 280, 220].map((h, i) => (
-        <div key={i} className="skeleton" style={{ height: `${h}px`, borderRadius: 'var(--radius-lg)' }} />
-      ))}
-      <div className="loading-label">
-        <div className="spinner spinner-lg" />
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Running agentic pipeline…</span>
+    <div className="mission-loading-wrap fade-in">
+      <div className="orbital-scanner-card card">
+        <div className="scanner-orb-wrap">
+          <div className="scanner-pulse-ring" />
+          <div className="scanner-pulse-ring-inner" />
+          <div className="scanner-sat-icon">🛰</div>
+        </div>
+
+        <h2 className="scanner-heading gradient-text">Satellite Copilot Executing Pipeline</h2>
+        <p className="scanner-sub">
+          Orchestrating VQA, ChangeFormer, SAM grounding, and SAR-optical multi-agent fusion…
+        </p>
+
+        <div className="scanner-telemetry-steps">
+          <div className="scanner-step active">
+            <span className="step-dot" />
+            <span>Multi-modal Perception & Task Intent Extraction</span>
+          </div>
+          <div className="scanner-step active">
+            <span className="step-dot" />
+            <span>Sensor Selection & Cloud Penetration Arbitration</span>
+          </div>
+          <div className="scanner-step active">
+            <span className="step-dot" />
+            <span>Bi-Temporal Change Detection & Spatial Intersection</span>
+          </div>
+          <div className="scanner-step active">
+            <span className="step-dot" />
+            <span>Cross-Modal Evidence Fusion & 6-Component Confidence Scoring</span>
+          </div>
+        </div>
+
+        <div className="progress-bar mt-4" style={{ height: '6px', maxWidth: '380px', margin: '1.5rem auto 0' }}>
+          <div className="progress-bar-fill scanner-progress-anim" />
+        </div>
       </div>
+
       <style>{`
-        .loading-label { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem; }
+        .mission-loading-wrap {
+          max-width: 720px;
+          margin: 4rem auto;
+          padding: 0 1.5rem;
+        }
+        .orbital-scanner-card {
+          text-align: center;
+          padding: 3rem 2rem;
+          background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.98));
+          border: 1px solid rgba(56, 189, 248, 0.35);
+          border-radius: 20px;
+          box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(56, 189, 248, 0.2);
+        }
+        .scanner-orb-wrap {
+          position: relative;
+          width: 90px;
+          height: 90px;
+          margin: 0 auto 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .scanner-pulse-ring {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          border: 2px dashed rgba(56, 189, 248, 0.6);
+          animation: spin 8s linear infinite;
+        }
+        .scanner-pulse-ring-inner {
+          position: absolute;
+          inset: 10px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(168, 85, 247, 0.5);
+          animation: spinReverse 6s linear infinite;
+        }
+        .scanner-sat-icon {
+          font-size: 2.2rem;
+          line-height: 1;
+          filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.8));
+          animation: floatOrb 3s ease-in-out infinite;
+        }
+        .scanner-heading {
+          font-size: 1.45rem;
+          font-weight: 800;
+          margin-bottom: 0.5rem;
+        }
+        .scanner-sub {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          max-width: 480px;
+          margin: 0 auto 1.5rem;
+        }
+        .scanner-telemetry-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          max-width: 460px;
+          margin: 0 auto;
+          text-align: left;
+        }
+        .scanner-step {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          font-size: 0.78rem;
+          color: var(--text-secondary);
+          font-family: var(--font-mono);
+          padding: 6px 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .scanner-step .step-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #38bdf8;
+          box-shadow: 0 0 6px #38bdf8;
+          animation: pulse 1.5s infinite;
+        }
+        .scanner-progress-anim {
+          width: 60%;
+          background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+          animation: loadingBar 2s infinite ease-in-out;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spinReverse { to { transform: rotate(-360deg); } }
+        @keyframes floatOrb {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes loadingBar {
+          0% { transform: translateX(-100%); width: 30%; }
+          50% { width: 70%; }
+          100% { transform: translateX(200%); width: 30%; }
+        }
       `}</style>
     </div>
   );
 }
 
 // ── Error card ────────────────────────────────────────────────────────────────
-function ErrorCard({ message }: { message: string }) {
+function ErrorCard({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="card fade-in" style={{ borderLeft: '3px solid var(--accent-danger)' }} id="error-card">
-      <div className="flex items-center gap-2 mb-2">
-        <span style={{ fontSize: '1.3rem' }}>⚠</span>
-        <p className="section-label" style={{ margin: 0, color: 'var(--accent-danger)' }}>Pipeline Error</p>
+    <div className="mission-error-wrap fade-in">
+      <div className="card error-card-inner" id="error-card">
+        <div className="flex items-center gap-2 mb-2">
+          <span style={{ fontSize: '1.4rem' }}>⚠</span>
+          <p className="section-label" style={{ margin: 0, color: 'var(--accent-danger)' }}>Pipeline Execution Error</p>
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{message}</p>
+        <p className="text-xs text-muted mt-3">
+          Ensure backend server is running: <code className="text-mono">uvicorn backend.main:app --reload</code>
+        </p>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm mt-4"
+          onClick={onRetry}
+        >
+          ↺ Return to Mission Setup
+        </button>
       </div>
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{message}</p>
-      <p className="text-xs text-muted mt-3">
-        Make sure the backend is running: <code className="text-mono">uvicorn backend.main:app --reload</code>
-      </p>
-    </div>
-  );
-}
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-function EmptyState() {
-  return (
-    <div className="empty-state fade-in" id="empty-state">
-      <div className="empty-orb">🛰</div>
-      <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>Ready to analyze</h2>
-      <p className="text-secondary" style={{ maxWidth: '360px', textAlign: 'center', fontSize: '0.9rem' }}>
-        Type or speak a question about your satellite imagery. Select one of the suggested query types,
-        or upload your own images and ask anything.
-      </p>
-      <div className="empty-features">
-        {['🔍 VQA', '📝 Caption', '📍 Grounding', '🔄 Change', '📡 SAR+Optical', '🎤 Voice'].map(f => (
-          <span key={f} className="hero-pill" style={{ fontSize: '0.78rem' }}>{f}</span>
-        ))}
-      </div>
       <style>{`
-        .empty-state { display: flex; flex-direction: column; align-items: center; padding: 3rem 2rem; gap: 1rem; }
-        .empty-orb { font-size: 4rem; line-height: 1; filter: drop-shadow(0 0 30px rgba(59,130,246,0.4)); }
-        .empty-features { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; margin-top: 0.5rem; }
+        .mission-error-wrap {
+          max-width: 640px;
+          margin: 4rem auto;
+          padding: 0 1.5rem;
+        }
+        .error-card-inner {
+          border-left: 4px solid var(--accent-danger);
+          padding: 2rem;
+          background: linear-gradient(145deg, rgba(30, 10, 15, 0.8), rgba(15, 23, 42, 0.95));
+        }
       `}</style>
     </div>
   );

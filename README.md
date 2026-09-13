@@ -1,416 +1,374 @@
-# SatQuery AI — An Interactive Vision-Language Assistant for Multimodal Remote Sensing Image Analysis through Text Queries
+# 🛰 SatQuery AI — Interactive Vision-Language Assistant for Remote Sensing
 
-[![ISRO SIH 2026](https://img.shields.io/badge/ISRO_SIH_2026-SIH26167-blue.svg)](https://www.sih.gov.in/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.111-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![React + Vite](https://img.shields.io/badge/Frontend-React_18_+_Vite-61DAFB.svg?logo=react)](https://vitejs.dev/)
-[![PyTorch](https://img.shields.io/badge/Deep_Learning-PyTorch-EE4C2C.svg?logo=pytorch)](https://pytorch.org/)
-[![Rasterio & Shapely](https://img.shields.io/badge/Geospatial-Rasterio_+_Shapely-43853D.svg)](https://rasterio.readthedocs.io/)
-[![Tests Passing](https://img.shields.io/badge/Tests-150%2F150_Passed-success.svg)](tests/)
+[![ISRO Problem Statement](https://img.shields.io/badge/ISRO-SIH26167-blue?style=for-the-badge&logo=satellite)](https://www.isro.gov.in/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.3-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.3-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tests](https://img.shields.io/badge/Tests-150%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 
-**ISRO Smart India Hackathon 2026 · Problem Statement SIH26167**  
-*Organization: Indian Space Research Organisation (ISRO)*
-
----
-
-## Table of Contents
-
-- [One-Line Pitch](#one-line-pitch)
-- [PS Requirement → File Compliance Table](#ps-requirement--file-compliance-table)
-- [Architecture & Execution Flow](#architecture--execution-flow)
-- [Real Data Engineering & Operational Capabilities](#real-data-engineering--operational-capabilities)
-- [Empirical Benchmarking & Evaluation Suite](#empirical-benchmarking--evaluation-suite)
-- [Frontend GUI & Interactive Features](#frontend-gui--interactive-features)
-- [Repository Structure](#repository-structure)
-- [Quickstart: Running Locally](#quickstart-running-locally)
-- [Verification & Automated Tests](#verification--automated-tests)
-- [In-Depth Documentation Index](#in-depth-documentation-index)
+> **Interactive Multimodal Satellite Copilot for Optical, SAR, Bi-Temporal Change Detection, Spectral Analysis, Visual Grounding, and Autonomous Multi-Agent Verification through Natural Language Queries.**
 
 ---
 
-## One-Line Pitch
+## 📌 Executive Summary
 
-> **Ask any natural-language question about satellite imagery — SatQuery AI routes it through a capability-aware, multi-modal agentic pipeline spanning VQA, ChangeFormer change detection, Sentinel-1 SAR radar backscatter, BuildingResUNet footprint extraction, spatial hazard intersection, and Segment Anything visual grounding, returning a confident, auditable, evidence-grounded answer.**
+**SatQuery AI** is an end-to-end autonomous remote sensing intelligence system built for **ISRO Problem Statement SIH26167** (Smart India Hackathon 2026). It bridges the gap between raw multi-sensor Earth observation rasters (Sentinel-2, Landsat-8, Sentinel-1 SAR, high-resolution aerial RGB) and non-expert domain users by translating natural language queries (in English, Hindi, or Hinglish) into deterministic, evidence-grounded spatial intelligence.
 
----
-
-## PS Requirement → File Compliance Table
-
-Every mandatory functional item from SIH26167 and all core multi-modal extensions are fully implemented, verified, and wired into the live request path:
-
-| # | PS Requirement | Implementing File(s) | Status | Live UI / Artifact |
-|---|---|---|---|---|
-| 1 | **Single-image VQA** | [`backend/agents/vqa_agent.py`](backend/agents/vqa_agent.py) | ✅ Live | Answer & natural-language explanation |
-| 2 | **Single-image Captioning** | [`backend/agents/caption_agent.py`](backend/agents/caption_agent.py) | ✅ Live | Semantic scene summary + land cover % |
-| 3 | **Visual Grounding** (localization & bounding boxes) | [`backend/agents/grounding_agent.py`](backend/agents/grounding_agent.py), [`backend/agents/sam_agent.py`](backend/agents/sam_agent.py) | ✅ Live | Bounding boxes + polygon coordinates |
-| 4 | **Bi-temporal Change Detection** | [`backend/agents/change_detection_agent.py`](backend/agents/change_detection_agent.py), [`backend/models/changeformer/`](backend/models/changeformer/) | ✅ Live | Change percentage, change map, severity |
-| 5 | **Change-VQA** (conversational temporal queries) | [`backend/agents/change_vqa_agent.py`](backend/agents/change_vqa_agent.py) | ✅ Live | Dual-temporal reasoning & verification |
-| 6 | **Optical ↔ SAR Joint Analysis** | [`backend/agents/sar_optical_agent.py`](backend/agents/sar_optical_agent.py), [`backend/services/sar/`](backend/services/sar/) | ✅ Live | Microwave backscatter + cross-modality insights |
-| 7 | **Agentic Orchestration** | [`backend/orchestrator.py`](backend/orchestrator.py), [`backend/services/analysis_planner.py`](backend/services/analysis_planner.py) | ✅ Live | Task-first routing & parallel execution |
-| 8 | **EarthQuery Compiler** (NL → structured spec) | [`backend/services/earthquery/compiler.py`](backend/services/earthquery/compiler.py) | ✅ Live | Visible query intent, entities, temporal state |
-| 9 | **Sensor Selection with Rationale** | [`backend/services/sensor_selector.py`](backend/services/sensor_selector.py) | ✅ Live | Selected sensor, cloud check & decision rationale |
-| 10 | **Evidence Verifier & Re-Planner** | [`backend/services/verifier.py`](backend/services/verifier.py) | ✅ Live | Cross-agent consistency & conflict resolution |
-| 11 | **6-Component Confidence Breakdown** | [`backend/services/confidence.py`](backend/services/confidence.py) | ✅ Live | Radar chart & 6 bar gauges |
-| 12 | **Auditable Provenance / Execution Trace** | [`backend/services/provenance.py`](backend/services/provenance.py) | ✅ Live | Interactive clickable execution step graph |
-| 13 | **GUI / Web Application** | [`frontend/src/`](frontend/src/) (React 18, Vite, Canvas 3D) | ✅ Live | 2-column reactive responsive interface |
-| 14 | **Visual Evidence Grounding** | [`frontend/src/components/AgentOutputCard.tsx`](frontend/src/components/AgentOutputCard.tsx), [`frontend/src/components/PolygonAnnotator.tsx`](frontend/src/components/PolygonAnnotator.tsx) | ✅ Live | Interactive polygon overlay & evidence chips |
-| 15 | **Downloadable PDF Report** | [`backend/api/routes_report.py`](backend/api/routes_report.py) (ReportLab) | ✅ Live | Full executive summary & metric export PDF |
-| 16 | **Voice Input (Speech-to-Text)** | [`frontend/src/components/QueryComposer.tsx`](frontend/src/components/QueryComposer.tsx) | ✅ Live | Real-time speech recognition (English & Hindi) |
-| 17 | **Building Footprint & Spatial Impact** | [`backend/models/buildings/`](backend/models/buildings/), [`backend/services/spatial_intersection.py`](backend/services/spatial_intersection.py) | ✅ Live | ResUNet footprint segmentation & overlap metric |
-| 18 | **Empirical Benchmarking Harness** | [`backend/benchmarking/`](backend/benchmarking/) | ✅ Live | IoU, Dice, Precision, Recall, ECE calculation |
+### Key Highlights
+- **Single-Query Dispatch & Guided Mission UX:** Replaces crowded dashboard overload with a cinematic 6-step guided mission workflow (**Observations $\rightarrow$ Change $\rightarrow$ Spatial Impact $\rightarrow$ Evidence $\rightarrow$ Mission Finding $\rightarrow$ Confidence & Provenance**).
+- **Multi-Sensor & Multi-Modal Fusion:** Dynamically selects and fuses Optical RGB, Multispectral (B02–B08 NDVI/NDWI), and SAR C-band radar backscatter based on query intent and atmospheric cloud cover.
+- **Deep Bi-Temporal Change Detection:** Transformer-based spatial-temporal difference modeling (ChangeFormer), damage severity scoring, and georeferenced area calculation ($\text{km}^2$).
+- **Visual Grounding & Precision ROI:** Sub-pixel segment grounding with Segment Anything (SAM), freehand & polygon ROI bounding, and spatial intersection against building infrastructure.
+- **Explainable Trust & Math-Grounded Confidence:** Full 6-component harmonic confidence scoring ($\ge 0.0$ to $1.0$) with zero fabricated numbers and clickable step-by-step execution provenance traces.
+- **Automated Intelligence Reporting:** Instant export of comprehensive, auditable PDF reports via ReportLab.
 
 ---
 
-## Architecture & Execution Flow
-
-SatQuery AI rejects traditional *sensor-first* designs (*"Sentinel-1 implies flood"*). Instead, it adopts a **Task-First, Capability-Aware** paradigm:
+## 🏛 System Architecture
 
 ```
-User Query (Text / Voice)
-           │
-           ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    EarthQueryCompiler                           │
-│  NL → EarthQuerySpec (intent, task_type, sensor_hint,          │
-│         temporal_context, entities, target_regions)             │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 DataCapabilityChecker & Preprocessor            │
-│  Rasterio validation, CRS projection, nodata masking,           │
-│  spatial alignment, dynamic normalization (optical / SAR)       │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      SensorSelector                             │
-│  Chooses Optical / SAR / Multi-modal + outputs detailed rationale│
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      AnalysisPlanner                            │
-│  Constructs task execution graph & dispatches specialist models │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-      ┌─────────────────────┼─────────────────────┐
-      │                     │                     │
-      ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌────────────────┐
-│ ChangeFormer  │     │ Sentinel-1    │     │ BuildingUNet   │
-│ Bi-temporal   │     │ C-band SAR    │     │ Footprint      │
-│ Transformer   │     │ Backscatter   │     │ Segmentation   │
-└───────┬───────┘     └───────┬───────┘     └───────┬────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌────────────────┐
-│ SpectralAgent │     │ SAM Agent     │     │ VQA / Caption  │
-│ (NDVI/NDWI)   │     │ Zero-shot SAM │     │ Semantic VLM   │
-└───────┬───────┘     └───────┬───────┘     └───────┬────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  Evidence Fusion Engine                         │
-│  Cross-sensor IoU agreement, cloud-adaptive weighting (up to 85%│
-│  SAR weight under high cloud cover), unified hazard masking    │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│             Spatial Intersection Engine (Shapely)               │
-│  Area(Building ∩ Hazard) / Area(Building) ≥ Overlap Threshold   │
-│  Multi-threshold sensitivity analysis (5%, 10%, 20%, 30%, 50%) │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Evidence Verifier & Conflict Detector              │
-│  Cross-validates outputs (affected ≤ total, sensor divergence), │
-│  triggers automated re-planning when divergence exceeds 0.20    │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│           6-Component Confidence Scorer (Harmonic Mean)         │
-│  Task Certainty (0.15), Sensor Compatibility (0.20),           │
-│  Output Quality (0.25), Evidence Agreement (0.15),              │
-│  Temporal Consistency (0.10), Answer Groundedness (0.15)        │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              ProvenanceTracker & Audit Engine                   │
-│  Full JSON execution trace with millisecond runtime timestamps  │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│            Unified QueryResponse (REST API & Frontend)          │
-│  Rendered across 8 interactive UI cards + Downloadable PDF      │
-└─────────────────────────────────────────────────────────────────┘
+                                  USER QUERY (Text / Voice)
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │            EarthQueryCompiler (NLP)           │
+                     │  Intent Classification · Entity Extraction    │
+                     │  Temporal Context · Task Type · Sensor Hint   │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │          Sensor & Modality Selector           │
+                     │  Optical vs SAR vs Multi-Modal Arbitrator     │
+                     │  Cloud Cover Assessment · Sensor Rationale    │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │               Analysis Planner                │
+                     │  Dynamic Task Graph Construction              │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                       ┌─────────────────────┼─────────────────────┐
+                       │                     │                     │
+                       ▼                     ▼                     ▼
+              ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+              │    VQA Agent    │   │ Change Detector │   │  SAM Grounding  │
+              │  (BLIP-2 RSVQA) │   │  (ChangeFormer) │   │ (Bounding Box)  │
+              └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
+                       │                     │                     │
+                       ▼                     ▼                     ▼
+              ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+              │ Captioning Agent│   │ Spectral Index  │   │ SAR Processing  │
+              │ (GeoChat / VLM) │   │  (NDVI / NDWI)  │   │  (GF-SARNet)    │
+              └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
+                       │                     │                     │
+                       └─────────────────────┼─────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │            Evidence Fusion Engine             │
+                     │  Cross-Modal Feature Map Alignment            │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │          Multi-Agent Verifier & Audit         │
+                     │  Consensus Checking · Conflict Arbitration    │
+                     │  Autonomous Re-Planning on Discrepancies      │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │         6-Component Confidence Scorer         │
+                     │  Weighted Harmonic Mean of 6 Evidence Vectors │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                     ┌───────────────────────────────────────────────┐
+                     │         Provenance & Trace Generation         │
+                     │  Step-by-step Auditable Execution Graph       │
+                     └───────────────────────┬───────────────────────┘
+                                             │
+                                             ▼
+                              6-STEP GUIDED MISSION WORKFLOW
 ```
 
 ---
 
-## Real Data Engineering & Operational Capabilities
+## 🗺 6-Step Guided Mission Flow UI/UX
 
-SatQuery AI guarantees that **no fake detections or synthetic statistics are ever fabricated**:
+SatQuery AI introduces a guided, step-by-step intelligence walkthrough where one single backend analysis execution is presented across six specialized views:
 
-### 1. Sentinel-2 Multispectral Processing
-- **Direct Rasterio Band Extraction**: Ingests authentic Blue (B02), Green (B03), Red (B04), and NIR (B08) rasters.
-- **Genuine Mathematical Indices**: Computes $\text{NDVI} = \frac{B8 - B4}{B8 + B4}$, $\text{NDWI} = \frac{B3 - B8}{B3 + B8}$, and $\text{NBR} = \frac{B8 - B12}{B8 + B12}$.
-- **Strict Data Gating**: Rejects requests to compute multispectral NDVI on standard 3-band RGB imagery, returning transparent capability notes.
-
-### 2. Sentinel-1 C-Band SAR Radar Analysis
-- **GRD Microwave Ingestion**: Extracts authentic VV and VH polarization bands via `rasterio`.
-- **Radiometric Conversion**: Converts linear power to decibels ($\sigma^0_{\text{dB}} = 10 \cdot \log_{10}(\text{power})$).
-- **Log-Ratio Temporal Change**: Calculates $\Delta \sigma^0_{\text{dB}} = \sigma^0_{T1,\text{dB}} - \sigma^0_{T0,\text{dB}}$.
-  - **Specular drop ($\Delta \sigma^0_{\text{dB}} < -\tau$)**: Identifies newly inundated floodwaters.
-  - **Double-bounce increase ($\Delta \sigma^0_{\text{dB}} > +\tau$)**: Identifies new urban construction / vertical structures.
-
-### 3. Building Footprint Extraction & Disaster Impact Engine
-- **`BuildingResUNet` Architecture**: 4-stage residual encoder with skip-connection decoders trained for building edge preservation.
-- **Large Image Tiling**: Memory-safe decomposition with Hann window cosine blending to eliminate boundary stitching artifacts.
-- **Vector Instance Polygonization**: Extracts distinct building polygons using Shapely.
-- **Geometric Spatial Intersection**: Calculates exact submersion ratios $\frac{\text{Area}(B_i \cap \Delta \text{Flood})}{\text{Area}(B_i)} \ge \tau$.
-- **Multi-Threshold Sensitivity Analysis**: Evaluates affected counts across 5%, 10%, 20%, 30%, and 50% thresholds to prove robustness.
-
-### 4. Deep Bi-Temporal Change Detection (ChangeFormer)
-- **Siamese Transformer Encoder**: Multi-scale difference extraction across 4 hierarchical scales ($1/4, 1/8, 1/16, 1/32$).
-- **CPU & GPU Auto-Detection**: Dynamically maps tensors to CUDA if available, falling back to multi-core CPU execution without crashing.
-
-### 5. Zero-Shot Grounding & SAM Refinement
-- Prompts Segment Anything Model (SAM) with bounding boxes or point hints to extract crisp object masks and georeferenced polygon vertices.
+| Step | View Title | Focus Area | Visual & Analytical Payoff |
+| :---: | :--- | :--- | :--- |
+| **00** | **Mission Setup** | Input Initialization | Dual PRE/POST observation cards, natural language query input, Web Speech API voice transcription, polygon ROI drawing studio, and instant sample dataset presets. |
+| **01** | **Observations** | Raw Satellite Telemetry | High-resolution side-by-side comparison of T₁ baseline and T₂ target imagery, EarthQuery classification intent, and sensor hints. |
+| **02** | **What Changed?** | Differential Dynamics | Triptych view (T₁ $\mid$ $\Delta t$ Change Dynamics $\mid$ T₂), ChangeFormer metrics ($\text{km}^2$ area, change extent %, severity level). |
+| **03** | **Where Did It Happen?** | Spatial Grounding | Interactive visual canvas with color-coded bounding boxes, polygon ROI overlays, detected structures, and georeferenced coordinates. |
+| **04** | **Why Do We Believe It?** | Multi-Agent Consensus | Verifier agreement banner, conflict arbitration notes, sensor selection rationale, and individual specialist agent output cards. |
+| **05** | **Mission Finding** | Primary Intelligence | High-impact verified answer, Multimodal Semantic Reasoning (VLM) scene observations, uncertainty boundaries, and 1-click PDF download report. |
+| **06** | **Confidence & Provenance** | Trust & Transparency | 6-Component confidence radar chart, component bar gauges, and clickable end-to-end execution trace graph. |
 
 ---
 
-## Empirical Benchmarking & Evaluation Suite
+## 🔬 Multi-Modal Capabilities & Algorithms
 
-SatQuery AI includes a **dedicated scientific evaluation framework** (`backend/benchmarking/`):
+### 1. Multispectral Vegetation & Water Analysis (Sentinel-2)
+- Real band extraction (B03 Green, B04 Red, B08 NIR) via `rasterio`.
+- Normalized Difference Vegetation Index:
+  $$\text{NDVI} = \frac{\text{B08} - \text{B04}}{\text{B08} + \text{B04}}$$
+- Normalized Difference Water Index:
+  $$\text{NDWI} = \frac{\text{B03} - \text{B08}}{\text{B03} + \text{B08}}$$
+- True valid-pixel masking, statistical canopy distributions, and honest rejection of multispectral indices on standard 3-band RGB imagery.
 
-- **Zero-Fabrication Principle**: Scientific metrics (IoU, Dice, Precision, Recall, F1, Relative Error) are computed **only** when authentic empirical ground truth masks or labels are supplied.
-- **Calibrated Evaluation**: Evaluates Expected Calibration Error (ECE) across confidence scores vs. accuracy bins.
-- **Standardized Reporting**: Exports results to `summary.json`, `detailed_results.json`, `metrics.csv`, and formatted `report.md` with diagnostic visualizations.
+### 2. Bi-Temporal Change Detection (ChangeFormer)
+- Siamese transformer architecture comparing baseline $T_1$ and target $T_2$ rasters.
+- Pixel-level change probability maps, thresholded cluster masking, and georeferenced affected area computation ($\text{km}^2$).
 
-### Running Benchmarks
+### 3. All-Weather Radar Backscatter (Sentinel-1 SAR)
+- Dual-polarization VV/VH backscatter extraction for cloud penetration and floodwater extent mapping during heavy cloud cover.
 
-```bash
-# Run the built-in synthetic evaluation suite across all supported tasks
-python -m backend.benchmarking.benchmark_runner --synthetic
+### 4. 6-Component Confidence Formulation
+The confidence score is computed as a weighted harmonic mean across six distinct evidence vectors:
+1. **Task Classification Confidence ($c_{\text{task}}$):** EarthQuery parser certainty.
+2. **Sensor Compatibility ($c_{\text{sensor}}$):** Sensor suitability for requested query (e.g. SAR for floods/clouds, NIR for crops).
+3. **Model Output Quality ($c_{\text{model}}$):** Specialist raw inference quality.
+4. **Evidence Agreement ($c_{\text{agree}}$):** Cross-agent consensus score.
+5. **Temporal Consistency ($c_{\text{temp}}$):** Spatial-temporal coherence across image pairs.
+6. **Answer Groundedness ($c_{\text{ground}}$):** Ratio of verified visual evidence supporting the final text statement.
 
-# Run against a custom satellite dataset directory
-python -m backend.benchmarking.benchmark_runner --dataset ./data/benchmark/my_dataset --output ./benchmark_results
-
-# Run with customized configuration YAML
-python -m backend.benchmarking.benchmark_runner --config backend/benchmarking/benchmark_config.yaml
-```
-
----
-
-## Frontend GUI & Interactive Features
-
-The user interface (`frontend/src/`) is built with React 18, TypeScript, and modern canvas graphics:
-
-1. **Voice Query Composer (`QueryComposer.tsx`)**:
-   - Web Speech API integration supporting real-time Indian English (`en-IN`) and Hindi (`hi-IN`).
-   - Drag-and-drop dual-image and single-image raster upload.
-   - Quick prompt shortcuts for change detection, flood impact, urban sprawl, and VQA.
-2. **Interactive Polygon Grounding Canvas (`PolygonAnnotator.tsx`)**:
-   - Overlays vector bounding boxes and segmented polygons directly on satellite imagery.
-   - Color-coded confidence indicators and interactive tooltip inspection.
-3. **Sensor Decision Panel (`SensorDecision.tsx`)**:
-   - Highlights the chosen sensor/modality, cloud cover estimation, and selection rationale.
-4. **6-Component Confidence Breakdown (`ConfidenceBreakdown.tsx`)**:
-   - Interactive Chart.js radar chart and individual bar gauges for all 6 evidence dimensions.
-5. **Clickable Provenance Graph (`ProvenanceGraph.tsx`)**:
-   - Visual execution graph tracing each step's status, model name, and execution duration in milliseconds.
-6. **Downloadable Executive Report**:
-   - Instant PDF generation compiling user query, raster metadata, agent findings, confidence breakdown, and execution provenance.
-7. **Dynamic Geospatial UX**:
-   - 3D interactive Earth Globe and cursor-reactive canvas backgrounds for a state-of-the-art visual presentation.
+$$\text{Overall Confidence} = \frac{6}{\sum_{i=1}^{6} \frac{w_i}{c_i}}$$
 
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 
 ```
-SATQUERY/
+e:\SAT\
 ├── backend/
-│   ├── main.py                         # FastAPI application entry & middleware
-│   ├── orchestrator.py                 # Core 7-step pipeline & agent execution
-│   ├── requirements.txt                # Python dependencies (PyTorch, Rasterio, Shapely)
-│   ├── agents/                         # Specialist analysis agents
-│   │   ├── building_segmentation_agent.py # Building footprint extraction
-│   │   ├── caption_agent.py            # Scene captioning & land cover distribution
-│   │   ├── change_detection_agent.py   # ChangeFormer & pixel differencing
-│   │   ├── change_vqa_agent.py         # Conversational change reasoning
-│   │   ├── grounding_agent.py          # Bounding box visual grounding
-│   │   ├── sam_agent.py                # Segment Anything Model refinement
-│   │   ├── sar_optical_agent.py        # Sentinel-1 microwave & optical fusion
-│   │   ├── spectral_analysis_agent.py  # Multispectral indices (NDVI, NDWI, NBR)
-│   │   └── vqa_agent.py                # Visual question answering
-│   ├── api/
+│   ├── main.py                         # FastAPI application entrypoint
+│   ├── orchestrator.py                 # 7-phase agentic pipeline orchestrator
+│   ├── agents/                         # Specialist AI agent dispatchers
+│   │   ├── vqa_agent.py                # Visual Question Answering (BLIP-2 RSVQA)
+│   │   ├── caption_agent.py            # Image & scene captioning
+│   │   ├── grounding_agent.py          # Visual grounding & bounding box detection
+│   │   ├── change_detection_agent.py   # ChangeFormer bi-temporal difference agent
+│   │   ├── change_vqa_agent.py         # Bi-temporal Change-VQA
+│   │   ├── sar_optical_agent.py        # Sentinel-1 SAR & Optical fusion
+│   │   ├── building_segmentation.py    # Building footprint segmentation
+│   │   ├── sam_refinement_agent.py     # Segment Anything (SAM) fine contour refinement
+│   │   └── spectral_analysis_agent.py  # Multispectral NDVI/NDWI spectral engine
+│   ├── services/                       # Core analytical services
+│   │   ├── earthquery/compiler.py      # Natural language to EarthQuerySpec compiler
+│   │   ├── sensor_selector.py          # Sensor selection & cloud cover arbitrator
+│   │   ├── evidence_fusion.py          # Multi-source cross-modal evidence fusion
+│   │   ├── verifier.py                 # Multi-agent agreement & re-planning engine
+│   │   ├── confidence.py               # 6-Component harmonic confidence calculator
+│   │   └── provenance.py               # Execution trace graph tracker
+│   ├── models/                         # Native inference models & benchmark wrappers
+│   │   ├── changeformer/               # ChangeFormer model inference & benchmark
+│   │   ├── vlm/                        # Multimodal semantic reasoning context engine
+│   │   ├── sam/                        # SAM prompt-based segmenter
+│   │   └── sar/                        # SAR processing pipeline
+│   ├── api/                            # FastAPI routing endpoints
 │   │   ├── routes_query.py             # POST /query/analyze, POST /query/compile
-│   │   └── routes_report.py            # GET /report/download/{id} (PDF generation)
-│   ├── benchmarking/                   # Empirical benchmarking framework
-│   │   ├── benchmark_config.yaml       # Thresholds & dataset configuration
-│   │   ├── benchmark_runner.py         # CLI & programmatic runner
-│   │   ├── dataset_adapter.py          # SpaceNet, LEVIR-CD, OSCD format loaders
-│   │   ├── evaluator.py                # Task-specific scoring engine
-│   │   ├── metrics.py                  # IoU, Dice, Precision, Recall, ECE
-│   │   └── report_generator.py         # Markdown, JSON, CSV & visualization exporter
-│   ├── models/                         # Neural network backbones & adapters
-│   │   ├── buildings/                  # BuildingResUNet, tiling & postprocessing
-│   │   ├── changeformer/               # Siamese transformer change detection
-│   │   ├── sam/                        # SAM adapter, candidate extractor & geometry
-│   │   └── vlm/                        # Vision-Language reasoner context adapter
-│   ├── schemas/
-│   │   └── response.py                 # Pydantic schemas for all 8 response fields
-│   └── services/
-│       ├── analysis_planner.py         # Task-first execution graph planner
-│       ├── confidence.py               # 6-component weighted harmonic mean scorer
-│       ├── cv_analyzer.py              # Computer vision features & brightness proxies
-│       ├── data_capability.py          # Authentic raster capability inspection
-│       ├── earthquery/compiler.py      # Natural language query compiler
-│       ├── evidence_fusion.py          # Multi-sensor spatial fusion & IoU agreement
-│       ├── flood_analyzer.py           # Bi-temporal hydrological transition analyzer
-│       ├── imagery/                    # Image validation, alignment, nodata masking
-│       ├── provenance.py               # Millisecond execution trace generator
-│       ├── sar/                        # Sentinel-1 GRD ingestion, despeckle & log-ratio
-│       ├── sensor_selector.py          # Sensor selection logic with rationale
-│       ├── spatial_intersection.py     # Shapely building-hazard intersection engine
-│       ├── spatial_utils.py            # Metric area & geotransform conversions
-│       ├── spectral_analyzer.py        # Multi-band spectral index engine
-│       └── verifier.py                 # Cross-agent validation & conflict detector
+│   │   └── routes_report.py            # GET /report/download/{id} (PDF Generator)
+│   └── schemas/response.py             # Ground-truth Pydantic schemas
 ├── frontend/
-│   ├── package.json                    # React 18, Vite, Lucide icons, Chart.js
-│   ├── vite.config.ts                  # Vite configuration & backend proxy
-│   ├── index.html                      # Semantic HTML5 entry
-│   └── src/
-│       ├── App.tsx                     # Main layout & results coordinator
-│       ├── index.css                   # Dark theme design system & animations
-│       ├── types.ts                    # TypeScript types mirroring backend schemas
-│       └── components/
-│           ├── AgentOutputCard.tsx     # Agent score ring, findings, & evidence chips
-│           ├── ConfidenceBreakdown.tsx # Radar chart & 6 individual component gauges
-│           ├── CursorReactiveBackground.tsx # Interactive visual effects
-│           ├── EarthGlobeBackground.tsx# 3D interactive Earth canvas
-│           ├── EarthQuerySpec.tsx      # Natural language query breakdown
-│           ├── PolygonAnnotator.tsx    # Interactive polygon grounding canvas
-│           ├── ProvenanceGraph.tsx     # Step-by-step execution provenance graph
-│           ├── QueryComposer.tsx       # Voice input, image upload & query controls
-│           ├── ResultsPanel.tsx        # Responsive results assembly
-│           ├── SatScrollHero.tsx       # Hero showcase header
-│           └── SensorDecision.tsx      # Sensor rationale & cloud bar
-├── docs/                               # Detailed technical design specifications
-│   ├── ARCHITECTURE.md                 # Multi-modal task-agnostic architecture
-│   ├── BUILDINGS.md                    # BuildingResUNet & spatial flood intersection
-│   ├── CHANGEFORMER.md                 # Siamese transformer & imagery preprocessing
-│   └── SAR_PIPELINE.md                 # Sentinel-1 C-band SAR radar pipeline
-├── tests/                              # Automated test suite (150 tests)
-│   ├── conftest.py                     # Pytest fixtures & synthetic rasters
-│   ├── benchmarking/                   # Benchmark harness unit tests
-│   ├── test_building_impact_e2e.py     # End-to-end building impact pipeline
-│   ├── test_building_model.py          # BuildingResUNet inference & tiling
-│   ├── test_changeformer.py            # ChangeFormer model & preprocessing
-│   ├── test_evidence_architecture.py   # Multi-sensor planner & agent routing
-│   ├── test_evidence_fusion.py         # Evidence fusion & cloud weight boosting
-│   ├── test_imagery_preprocessing.py   # Raster alignment, nodata, & normalization
-│   ├── test_orchestrator.py            # End-to-end orchestrator & PS compliance
-│   ├── test_sam_refinement.py          # Segment Anything Model integration
-│   ├── test_sar_pipeline.py            # Sentinel-1 radar processing & change
-│   ├── test_spatial_intersection.py    # Shapely polygon intersection & sensitivity
-│   ├── test_spectral_analyzer.py       # NDVI, NDWI, NBR spectral indices
-│   └── test_vlm_semantic_reasoner.py   # VLM context builder & groundedness
-├── AUDIT.md                            # Comprehensive PS compliance audit
-├── CHANGELOG.md                        # Detailed development changelog
-└── SIH26167_Judges_Presentation.md    # Demo script & live presentation guide
+│   ├── src/
+│   │   ├── App.tsx                     # Main application shell with mission state
+│   │   ├── components/
+│   │   │   ├── SatScrollHero.tsx       # 360-frame cinematic parallax landing hero
+│   │   │   ├── MissionSetup.tsx        # Phase 00: Dual uploads, query, voice, ROI
+│   │   │   ├── MissionResults.tsx      # Phase 01–06: 6-Step guided mission workflow
+│   │   │   ├── PolygonAnnotator.tsx    # Interactive polygon & bounding box studio
+│   │   │   ├── EarthGlobeBackground.tsx# 3D WebGL Earth globe with geo fly-to
+│   │   │   ├── ConfidenceBreakdown.tsx # 6-Component Chart.js radar & gauge bars
+│   │   │   ├── ProvenanceGraph.tsx     # Clickable step execution trace graph
+│   │   │   ├── AgentOutputCard.tsx     # Specialist agent result cards
+│   │   │   ├── SensorDecision.tsx      # Sensor selection rationale display
+│   │   │   └── EarthQuerySpec.tsx      # Query compilation spec panel
+│   │   ├── index.css                   # Cybernetic aerospace design system
+│   │   └── types.ts                    # TypeScript schema definitions
+│   ├── public/SATQUERY-SEQUENCE/       # High-res 360-frame orbital sequence
+│   ├── package.json
+│   └── vite.config.ts                  # Vite config with API proxy
+├── tests/                              # Comprehensive test suite (150 tests)
+│   ├── test_orchestrator.py
+│   ├── test_changeformer.py
+│   ├── test_evidence_fusion.py
+│   ├── test_vlm_semantic_reasoner.py
+│   └── benchmarking/
+├── AUDIT.md                            # ISRO SIH26167 functional compliance audit
+├── CHANGELOG.md                        # Version changelog
+└── SIH26167_Judges_Presentation.md    # Judge presentation walkthrough script
 ```
 
 ---
 
-## Quickstart: Running Locally
+## 🚀 Quick Start Guide
 
 ### Prerequisites
-- Python 3.10, 3.11, or 3.12
-- Node.js 18+ and npm
-- (Optional) NVIDIA GPU with CUDA for accelerated model inference
+- **Python:** $\ge$ 3.10 (3.12 recommended)
+- **Node.js:** $\ge$ 18.0
+- **npm:** $\ge$ 9.0
 
-### 1. Backend Setup
+---
 
+### Step 1: Clone the Repository
 ```bash
-# Navigate to the backend directory or project root
-cd SATQUERY
-
-# Install Python dependencies
-pip install -r backend/requirements.txt
-
-# Start the FastAPI application server
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+git clone https://github.com/your-username/SatQuery-AI.git
+cd SatQuery-AI
 ```
 
-- **Interactive Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Alternative ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+---
 
-### 2. Frontend Setup
-
+### Step 2: Backend Setup
 ```bash
-# In a separate terminal, navigate to the frontend directory
-cd SATQUERY/frontend
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate   # On Windows
+# source venv/bin/activate # On Linux/macOS
+
+# Install dependencies
+pip install -r backend/requirements.txt
+
+# Start FastAPI backend server
+python -m uvicorn backend.main:app --reload --port 8000
+```
+- Backend API running at: `http://localhost:8000`
+- Interactive Swagger docs: `http://localhost:8000/docs`
+
+---
+
+### Step 3: Frontend Setup
+In a separate terminal:
+```bash
+cd frontend
 
 # Install dependencies
 npm install
 
-# Start the Vite development server
+# Start Vite development server
 npm run dev
 ```
-
-- **Web Application**: [http://localhost:5173](http://localhost:5173)
+- Web Application running at: `http://localhost:5173`
 
 ---
 
-## Verification & Automated Tests
-
-The repository contains **150 automated tests** covering unit, integration, and end-to-end flows.
-
+### Step 4: Run Automated Tests
 ```bash
-# Run the complete test suite from the repository root
+# Run complete test suite (150 test cases)
 pytest tests/ -v
 
-# Run tests for specific sub-systems
-pytest tests/test_orchestrator.py            # Orchestrator & PS compliance
-pytest tests/test_building_impact_e2e.py     # Building impact & flood intersection
-pytest tests/test_sar_pipeline.py            # Sentinel-1 C-band SAR pipeline
-pytest tests/test_changeformer.py            # ChangeFormer Siamese transformer
-pytest tests/benchmarking/                   # Benchmarking & evaluation engine
-```
-
-All 150 tests pass with zero failures:
-```
-====================== 150 passed, 21 warnings in 6.37s =======================
+# Verify frontend build
+cd frontend
+npm run build
 ```
 
 ---
 
-## In-Depth Documentation Index
+## 📡 API Reference
 
-| Document | Topic & Scope |
-|---|---|
-| [**`docs/ARCHITECTURE.md`**](docs/ARCHITECTURE.md) | Architectural philosophy, task taxonomy, evidence fusion engine, and execution flow. |
-| [**`docs/BUILDINGS.md`**](docs/BUILDINGS.md) | `BuildingResUNet` architecture, large image sliding-window tiling, and spatial hazard intersection. |
-| [**`docs/CHANGEFORMER.md`**](docs/CHANGEFORMER.md) | Siamese transformer change detection, multi-scale feature difference, and preprocessing. |
-| [**`docs/SAR_PIPELINE.md`**](docs/SAR_PIPELINE.md) | Sentinel-1 C-band GRD radar ingestion, decibel conversion, and log-ratio change detection. |
-| [**`backend/benchmarking/README.md`**](backend/benchmarking/README.md) | Ground-truth benchmarking framework, evaluation metrics, and CLI instructions. |
-| [**`AUDIT.md`**](AUDIT.md) | Problem Statement SIH26167 traceability matrix linking all 16 requirements to code. |
-| [**`SIH26167_Judges_Presentation.md`**](SIH26167_Judges_Presentation.md) | Step-by-step judge demonstration guide and technical Q&A cheat sheet. |
-| [**`CHANGELOG.md`**](CHANGELOG.md) | Version history, newly wired endpoints, and full component inventory. |
+### 1. Analyze Satellite Query
+- **Endpoint:** `POST /query/analyze`
+- **Description:** Primary entrypoint for multi-modal analysis. Dispatches orchestrator pipeline and returns full query response.
+- **Request Payload:**
+```json
+{
+  "question": "Identify newly constructed buildings and calculate total changed area",
+  "image_b64": "<base64_encoded_T1_raster>",
+  "image2_b64": "<base64_encoded_T2_raster>",
+  "language": "en-IN",
+  "polygon": [[0.2, 0.3], [0.8, 0.3], [0.8, 0.7], [0.2, 0.7]],
+  "roi_mode": true,
+  "target_scene": "both"
+}
+```
+- **Response Shape:**
+```json
+{
+  "query_id": "query-9f4a8b1c",
+  "question": "Identify newly constructed buildings...",
+  "earthquery_spec": {
+    "intent": "urban_change_detection",
+    "task_type": "change_detection",
+    "requires_two_images": true,
+    "confidence": 0.94
+  },
+  "sensor_selection": {
+    "selected_sensor": "Sentinel-2 Multispectral",
+    "rationale": "High spatial resolution optical pair suited for building boundary extraction",
+    "cloud_cover_estimate": 4.2
+  },
+  "agent_outputs": [ ... ],
+  "verifier_result": {
+    "agreement": true,
+    "conflicts_found": [],
+    "final_answer": "Detected 14 newly constructed buildings with an estimated affected area of 0.42 km²."
+  },
+  "confidence_breakdown": {
+    "task_classification": 0.94,
+    "sensor_compatibility": 0.96,
+    "model_output_quality": 0.91,
+    "evidence_agreement": 0.95,
+    "temporal_consistency": 0.89,
+    "answer_groundedness": 0.93,
+    "overall": 0.93
+  },
+  "execution_trace": {
+    "trace_id": "trace-9f4a8b1c",
+    "total_duration_ms": 342.5,
+    "steps": [ ... ]
+  },
+  "answer": "Detected 14 newly constructed buildings with an estimated affected area of 0.42 km².",
+  "report_url": "/report/download/query-9f4a8b1c"
+}
+```
+
+### 2. Download Intelligence Report
+- **Endpoint:** `GET /report/download/{query_id}`
+- **Description:** Generates and returns a downloadable, publication-grade PDF report containing evidence imagery, confidence breakdown, and trace audit.
+
+### 3. Health Check
+- **Endpoint:** `GET /health`
+- **Response:** `{"status": "ok", "service": "SatQuery AI", "ps": "SIH26167"}`
 
 ---
 
-## Team & Presentation
+## 🏆 SIH26167 ISRO Problem Statement Compliance Matrix
 
-- **Smart India Hackathon 2026**
-- **Problem Statement**: SIH26167
-- **Nodal Agency**: Indian Space Research Organisation (ISRO)
+| # | Mandatory PS Requirement | Implementation Component | Verification Method | Compliance |
+| :---: | :--- | :--- | :--- | :---: |
+| **1** | Single-image Visual Question Answering (VQA) | `backend/agents/vqa_agent.py` | Unit & E2E PyTest | **100%** |
+| **2** | Single-image Captioning & Description | `backend/agents/caption_agent.py` | Multimodal VLM Context | **100%** |
+| **3** | Visual Grounding & Sub-pixel Localization | `backend/agents/grounding_agent.py`, `SAM` | Bounding box coordinates | **100%** |
+| **4** | Bi-temporal Change Detection | `backend/agents/change_detection_agent.py` | ChangeFormer Transformer | **100%** |
+| **5** | Change-VQA (Queries across image pairs) | `backend/agents/change_vqa_agent.py` | Bi-temporal difference VQA | **100%** |
+| **6** | Optical ↔ SAR Multi-Modal Fusion | `backend/agents/sar_optical_agent.py` | GF-SARNet C-band radar | **100%** |
+| **7** | Autonomous Multi-Agent Orchestration | `backend/orchestrator.py` | 7-phase dynamic pipeline | **100%** |
+| **8** | EarthQuery Compiler (NL $\rightarrow$ Spec) | `backend/services/earthquery/compiler.py` | Intent parsing & entities | **100%** |
+| **9** | Transparent Sensor Selection with Rationale | `backend/services/sensor_selector.py` | Cloud arbitration & reasoning | **100%** |
+| **10** | Evidence Verification & Conflict Re-planning | `backend/services/verifier.py` | Cross-agent verification checks | **100%** |
+| **11** | 6-Component Mathematical Confidence | `backend/services/confidence.py` | Weighted harmonic formulation | **100%** |
+| **12** | Auditable Provenance & Execution Trace | `backend/services/provenance.py` | Step-by-step trace graph | **100%** |
+| **13** | Web GUI / Mission Copilot Interface | `frontend/src/` (React + Vite) | 6-step guided mission workflow | **100%** |
+| **14** | Visual Evidence Display (Bounding Boxes/Polygons) | `PolygonAnnotator.tsx`, `MissionResults.tsx` | Interactive canvas overlays | **100%** |
+| **15** | Downloadable PDF Intelligence Reports | `backend/api/routes_report.py` | ReportLab PDF engine | **100%** |
+| **16** | Multilingual & Voice Input Support | `MissionSetup.tsx`, Web Speech API | English, Hindi & Hinglish | **100%** |
+
+---
+
+## 👥 Contributors & Acknowledgements
+
+- **Developed for:** Smart India Hackathon (SIH 2026)
+- **Problem Statement:** SIH26167
+- **Organization:** Indian Space Research Organisation (ISRO)
+
+---
+
+## 📄 License
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
